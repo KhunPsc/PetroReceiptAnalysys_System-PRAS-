@@ -3,1330 +3,1938 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบตรวจสอบและบันทึกข้อมูลใบเสร็จการเติมน้ำมันเชื้อเพลิง</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+  <title>ระบบตรวจสอบข้อมูลใบเสร็จการเติมน้ำมัน</title>
   <style>
-    :root {
-      --bg-main:
-        radial-gradient(circle at 15% 20%, rgba(125, 211, 252, 0.45), transparent 30%),
-        radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.28), transparent 28%),
-        radial-gradient(circle at 75% 78%, rgba(168, 85, 247, 0.22), transparent 30%),
-        linear-gradient(135deg, #eff8ff 0%, #eef2ff 45%, #f5f3ff 100%);
+    :root{
+      --bg:#f7f4ff;
+      --bg-2:#eef8ff;
+      --bg-3:#fff7ec;
+      --card:rgba(255,255,255,.78);
+      --card-solid:#ffffff;
+      --text:#1f2937;
+      --muted:#667085;
+      --line:rgba(148,163,184,.22);
 
-      --bg-overlay:
-        linear-gradient(120deg, rgba(255,255,255,0.30), rgba(255,255,255,0.04));
+      --primary:#5b7cff;
+      --primary-2:#4264f2;
+      --primary-soft:#e7edff;
 
-      --text-main: #172033;
-      --text-soft: #5f6b84;
-      --surface: rgba(255,255,255,0.80);
-      --surface-strong: rgba(255,255,255,0.92);
-      --surface-muted: rgba(248,250,252,0.86);
-      --surface-dark-box: #111827;
-      --border-soft: rgba(148,163,184,0.22);
-      --shadow-lg: 0 16px 40px rgba(31, 41, 55, 0.08);
-      --shadow-md: 0 10px 24px rgba(31, 41, 55, 0.07);
+      --success:#16a34a;
+      --warning:#ea8b2f;
+      --danger:#ef4444;
 
-      --primary: #2563eb;
-      --primary-soft: rgba(37,99,235,0.12);
-      --success: #198754;
-      --danger: #dc3545;
-      --warning-bg: #ffe58f;
-      --warning-text: #5f4300;
+      --accent-orange-1:#ffd08a;
+      --accent-orange-2:#ffb347;
+      --accent-orange-3:#ff9838;
+      --accent-orange-4:#ff7a18;
+      --accent-orange-5:#ff6a00;
 
-      --input-bg: rgba(255,255,255,0.90);
-      --input-border: rgba(148,163,184,0.25);
-      --input-focus-shadow: 0 0 0 0.22rem rgba(37,99,235,0.14);
+      --chip-bg:rgba(255,255,255,.78);
+      --panel-bg:rgba(255,255,255,.72);
+      --preview-bg:#f8fafc;
+      --input-bg:rgba(255,255,255,.85);
 
-      --loader-bg: rgba(255,255,255,0.82);
-      --modal-bg: rgba(255,255,255,0.94);
-      --modal-image-bg: #0f172a;
+      --shadow:0 18px 50px rgba(84, 110, 255, .10), 0 8px 18px rgba(0,0,0,.05);
+      --shadow-soft:0 10px 30px rgba(0,0,0,.08);
+      --radius:22px;
 
-      --pill-bg: rgba(255,255,255,0.65);
-      --hover-lift-shadow: 0 14px 34px rgba(31,41,55,0.10);
+      --toggle-track:#e8eefc;
+      --toggle-thumb:#ffffff;
+      --toggle-text:#475569;
     }
 
-    body.dark-mode {
-      --bg-main:
-        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.18), transparent 28%),
-        radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.18), transparent 28%),
-        radial-gradient(circle at 70% 80%, rgba(168, 85, 247, 0.14), transparent 28%),
-        linear-gradient(135deg, #0b1120 0%, #111827 45%, #1f1340 100%);
+    body.theme-dark{
+      --bg:#0f1324;
+      --bg-2:#101a32;
+      --bg-3:#1b1530;
+      --card:rgba(17,24,39,.72);
+      --card-solid:#111827;
+      --text:#e5eefc;
+      --muted:#94a3b8;
+      --line:rgba(148,163,184,.18);
 
-      --bg-overlay:
-        linear-gradient(120deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      --primary:#7c9bff;
+      --primary-2:#5f82ff;
+      --primary-soft:rgba(91,124,255,.16);
 
-      --text-main: #e5eefc;
-      --text-soft: #aab8d6;
-      --surface: rgba(15, 23, 42, 0.74);
-      --surface-strong: rgba(15, 23, 42, 0.88);
-      --surface-muted: rgba(17,24,39,0.82);
-      --surface-dark-box: #020617;
-      --border-soft: rgba(148,163,184,0.16);
-      --shadow-lg: 0 20px 44px rgba(0,0,0,0.36);
-      --shadow-md: 0 12px 28px rgba(0,0,0,0.28);
+      --success:#22c55e;
+      --warning:#fb923c;
+      --danger:#f87171;
 
-      --primary: #60a5fa;
-      --primary-soft: rgba(96,165,250,0.16);
-      --success: #34d399;
-      --danger: #fb7185;
-      --warning-bg: rgba(250,204,21,0.18);
-      --warning-text: #fde68a;
+      --chip-bg:rgba(17,24,39,.72);
+      --panel-bg:rgba(17,24,39,.72);
+      --preview-bg:#0f172a;
+      --input-bg:rgba(15,23,42,.86);
 
-      --input-bg: rgba(15,23,42,0.88);
-      --input-border: rgba(148,163,184,0.20);
-      --input-focus-shadow: 0 0 0 0.22rem rgba(96,165,250,0.18);
+      --shadow:0 24px 60px rgba(0,0,0,.38), 0 6px 18px rgba(0,0,0,.22);
+      --shadow-soft:0 14px 36px rgba(0,0,0,.28);
 
-      --loader-bg: rgba(2,6,23,0.72);
-      --modal-bg: rgba(15, 23, 42, 0.96);
-      --modal-image-bg: #020617;
-
-      --pill-bg: rgba(30,41,59,0.72);
-      --hover-lift-shadow: 0 16px 38px rgba(0,0,0,0.38);
+      --toggle-track:#1e293b;
+      --toggle-thumb:#0f172a;
+      --toggle-text:#e5eefc;
     }
 
-    html, body {
-      min-height: 100%;
-    }
-
-    body {
-      background: var(--bg-main);
-      background-attachment: fixed;
-      font-family: 'Sarabun', sans-serif;
-      padding: 20px;
-      color: var(--text-main);
-      position: relative;
-      overflow-x: hidden;
-      transition: background 0.35s ease, color 0.25s ease;
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
+      background:
+        radial-gradient(circle at 8% 14%, rgba(255,196,123,.36) 0, rgba(255,196,123,0) 22%),
+        radial-gradient(circle at 88% 12%, rgba(124,155,255,.26) 0, rgba(124,155,255,0) 24%),
+        radial-gradient(circle at 78% 84%, rgba(255,140,102,.14) 0, rgba(255,140,102,0) 24%),
+        linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 42%, var(--bg-3) 100%);
+      transition: background .35s ease, color .25s ease;
     }
 
     body::before,
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: -2;
+    body::after{
+      content:"";
+      position:fixed;
+      inset:auto;
+      pointer-events:none;
+      z-index:0;
+      filter: blur(2px);
+      opacity:.92;
+      transition:opacity .3s ease;
     }
 
-    body::before {
-      background: var(--bg-main);
-      filter: saturate(110%);
-    }
-
-    body::after {
-      z-index: -1;
+    body::before{
+      width:420px;height:420px;
+      left:-120px;top:90px;
       background:
-        linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 40%),
-        linear-gradient(315deg, rgba(255,255,255,0.05) 0%, transparent 45%),
-        radial-gradient(circle at top left, rgba(255,255,255,0.15), transparent 25%);
-      opacity: 0.9;
+        radial-gradient(circle at 35% 35%, rgba(255,210,138,.85) 0 22%, transparent 23%),
+        radial-gradient(circle at 62% 42%, rgba(255,179,71,.85) 0 20%, transparent 21%),
+        radial-gradient(circle at 45% 62%, rgba(255,122,24,.50) 0 20%, transparent 21%),
+        radial-gradient(circle at 70% 70%, rgba(91,124,255,.30) 0 18%, transparent 19%);
     }
 
-    .glass-panel {
-      background: var(--surface);
+    body::after{
+      width:520px;height:520px;
+      right:-140px;bottom:-60px;
+      background:
+        radial-gradient(circle at 48% 38%, rgba(91,124,255,.24) 0 24%, transparent 25%),
+        radial-gradient(circle at 28% 62%, rgba(155,195,255,.24) 0 18%, transparent 19%),
+        radial-gradient(circle at 70% 62%, rgba(255,183,71,.24) 0 18%, transparent 19%);
+    }
+
+    .bg-grid{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity:.28;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.40), rgba(0,0,0,.10));
+    }
+
+    body.theme-dark .bg-grid{
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      opacity:.38;
+    }
+
+    .app{
+      max-width: 1760px;
+      margin: 24px auto;
+      padding: 0 16px 28px;
+      position:relative;
+      z-index:1;
+    }
+
+    .header{margin-bottom:18px}
+
+    .brand{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+      flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.12));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:var(--shadow);
+      border-radius:28px;
+      padding:18px 20px;
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      border: 1px solid var(--border-soft);
-      box-shadow: var(--shadow-lg);
     }
 
-    .main-header {
-      background: var(--surface);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-radius: 22px;
-      box-shadow: var(--shadow-lg);
-      padding: 30px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border-soft);
-      position: relative;
-      overflow: hidden;
+    body.theme-dark .brand{
+      background:linear-gradient(180deg, rgba(17,24,39,.65), rgba(17,24,39,.35));
+      border-color:rgba(255,255,255,.06);
     }
 
-    .main-header::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--bg-overlay);
-      pointer-events: none;
+    .brand-left{
+      display:flex;
+      align-items:flex-start;
+      gap:16px;
+      flex:1;
+      min-width:290px;
     }
 
-    .header-inner {
-      position: relative;
-      z-index: 1;
+    .brand-logo-wrap{
+      width:84px;
+      height:84px;
+      border-radius:24px;
+      background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+      border:1px solid rgba(255,255,255,.8);
+      box-shadow:
+        0 14px 34px rgba(0,0,0,.08),
+        inset 0 1px 0 rgba(255,255,255,.9);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
     }
 
-    .header-top {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 8px;
+    body.theme-dark .brand-logo-wrap{
+      background:linear-gradient(180deg,#1f2937 0%, #111827 100%);
+      border-color:rgba(255,255,255,.08);
+      box-shadow:
+        0 16px 34px rgba(0,0,0,.26),
+        inset 0 1px 0 rgba(255,255,255,.04);
     }
 
-    .theme-toggle {
-      border: 1px solid var(--border-soft);
-      background: var(--surface-strong);
-      color: var(--text-main);
-      border-radius: 999px;
-      padding: 9px 14px;
-      font-weight: 600;
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.05);
-      transition: all 0.25s ease;
+    .brand-logo{
+      max-width:64px;
+      max-height:64px;
+      object-fit:contain;
+      display:block;
     }
 
-    .theme-toggle:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-      background: var(--surface-strong);
-      color: var(--text-main);
+    .brand-text{
+      flex:1;
+      min-width:280px;
     }
 
-    .summary-bar {
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-soft);
-      border-radius: 18px;
-      box-shadow: var(--shadow-md);
-      padding: 18px;
-      margin-bottom: 20px;
-      display: none;
-      position: sticky;
-      top: 10px;
-      z-index: 100;
-      transition: background 0.25s ease, border-color 0.25s ease;
+    .title{
+      margin:0;
+      font-weight:900;
+      letter-spacing:-0.02em;
+      line-height:1.08;
     }
 
-    .summary-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--pill-bg);
-      color: var(--text-main);
-      border: 1px solid var(--border-soft);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-right: 8px;
-      margin-bottom: 8px;
-      backdrop-filter: blur(10px);
+    .title-gradient{
+      background:linear-gradient(135deg,
+        var(--accent-orange-1) 0%,
+        var(--accent-orange-2) 18%,
+        var(--accent-orange-3) 38%,
+        var(--accent-orange-4) 58%,
+        var(--accent-orange-5) 78%,
+        var(--accent-orange-2) 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      -webkit-text-fill-color:transparent;
+      filter:
+        drop-shadow(0 1px 0 rgba(255,255,255,.68))
+        drop-shadow(0 6px 14px rgba(255,122,24,.18));
+      -webkit-text-stroke: 1px rgba(255,255,255,.14);
     }
 
-    .toolbar-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      border-top: 1px solid var(--border-soft);
-      padding-top: 14px;
+    body.theme-dark .title-gradient{
+      filter:
+        drop-shadow(0 1px 0 rgba(255,255,255,.05))
+        drop-shadow(0 8px 16px rgba(255,122,24,.20));
+      -webkit-text-stroke: 1px rgba(255,255,255,.05);
     }
 
-    .toolbar-left,
-    .toolbar-right {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
+    .title-main{font-size:32px}
+    .title-sub{font-size:22px;margin-top:4px;opacity:.98}
+    .subtitle{margin:8px 0 0;color:var(--muted);font-size:14px}
+
+    .top-summary{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
     }
 
-    .receipt-card {
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 20px;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 24px;
-      overflow: hidden;
-      border: 1px solid var(--border-soft);
-      transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.25s ease;
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid var(--line);
+      background:var(--chip-bg);
+      backdrop-filter: blur(8px);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      color:var(--text);
+      font-weight:700;
+      box-shadow:0 6px 18px rgba(0,0,0,.04);
     }
 
-    .receipt-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--hover-lift-shadow);
+    .header-actions{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-left:auto;
+      align-self:flex-start;
+      flex-wrap:wrap;
     }
 
-    .receipt-card.selected {
-      outline: 3px solid var(--primary-soft);
-      border-left: 6px solid var(--primary);
+    .btn-link{
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
 
-    .success-card {
-      opacity: 0.96;
-      border-left: 6px solid var(--success) !important;
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:12px 15px;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+      transition:transform .18s ease, background .18s ease, box-shadow .18s ease, opacity .18s ease, color .18s ease;
     }
 
-    .img-container {
+    .btn:hover:not(:disabled){
+      transform:translateY(-1px);
+    }
+
+    .btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      transform:none !important;
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--primary) 0%, var(--primary-2) 100%);
+      color:#fff;
+      box-shadow:0 10px 22px rgba(91,124,255,.22);
+    }
+
+    .btn-primary:hover:not(:disabled){filter:brightness(1.02)}
+
+    .btn-secondary{
+      background:var(--primary-soft);
+      color:var(--primary-2);
+      box-shadow:0 6px 18px rgba(0,0,0,.04);
+    }
+
+    body.theme-dark .btn-secondary{
+      color:#dbe7ff;
+    }
+
+    .btn-success{
+      background:linear-gradient(135deg,#16a34a 0%, #22c55e 100%);
+      color:#fff;
+      box-shadow:0 10px 22px rgba(34,197,94,.20);
+    }
+
+    .btn-danger{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    body.theme-dark .btn-danger{
+      background:rgba(239,68,68,.15);
+      color:#fecaca;
+    }
+
+    .btn-warning{
+      background:#fff7ed;
+      color:#9a3412;
+    }
+
+    body.theme-dark .btn-warning{
+      background:rgba(251,146,60,.14);
+      color:#fdba74;
+    }
+
+    .btn-sheet{
+      background:linear-gradient(135deg,#16a34a 0%, #22c55e 55%, #4ade80 100%);
+      color:#fff;
+      box-shadow:
+        0 10px 24px rgba(34,197,94,.22),
+        inset 0 1px 0 rgba(255,255,255,.18);
+    }
+
+    .theme-toggle{
+      position:relative;
+      width:82px;
+      height:44px;
+      border:none;
+      border-radius:999px;
+      background:var(--toggle-track);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.55),
+        0 10px 24px rgba(0,0,0,.08);
+      cursor:pointer;
+      transition:all .28s ease;
+      padding:0;
+      overflow:hidden;
+    }
+
+    .theme-toggle:hover{
+      transform:translateY(-1px);
+    }
+
+    .theme-toggle-track{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
       background:
-        linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.92));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 340px;
-      cursor: zoom-in;
-      position: relative;
-      overflow: hidden;
+        linear-gradient(135deg, rgba(255,255,255,.52), rgba(255,255,255,.12));
     }
 
-    body.dark-mode .img-container {
+    body.theme-dark .theme-toggle-track{
       background:
-        linear-gradient(135deg, rgba(2,6,23,0.96), rgba(15,23,42,0.96));
+        linear-gradient(135deg, rgba(124,155,255,.18), rgba(15,23,42,.12));
     }
 
-    .img-container::after {
-      content: "คลิกเพื่อดูรูปเต็ม";
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      backdrop-filter: blur(6px);
+    .theme-toggle-thumb{
+      position:absolute;
+      top:4px;
+      left:4px;
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      background:var(--toggle-thumb);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:17px;
+      box-shadow:
+        0 8px 16px rgba(0,0,0,.12),
+        inset 0 1px 0 rgba(255,255,255,.72);
+      transition:transform .28s ease, background .28s ease, box-shadow .28s ease;
     }
 
-    .img-container img {
-      max-width: 100%;
-      max-height: 520px;
-      object-fit: contain;
+    body.theme-dark .theme-toggle-thumb{
+      transform:translateX(38px);
+      box-shadow:
+        0 8px 18px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.04);
     }
 
-    .form-section {
-      padding: 24px;
+    .theme-icon-sun,
+    .theme-icon-moon{
+      position:absolute;
+      font-size:15px;
+      transition:opacity .22s ease, transform .22s ease;
     }
 
-    .card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
+    .theme-icon-sun{opacity:1; transform:scale(1)}
+    .theme-icon-moon{opacity:0; transform:scale(.6)}
+    body.theme-dark .theme-icon-sun{opacity:0; transform:scale(.6)}
+    body.theme-dark .theme-icon-moon{opacity:1; transform:scale(1)}
+
+    .theme-toggle-label{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      color:var(--toggle-text);
+      font-size:13px;
+      font-weight:800;
+      pointer-events:none;
+      opacity:.75;
     }
 
-    .card-top-left {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
+    .layout{
+      display:grid;
+      grid-template-columns: 330px 1.05fr 360px 450px;
+      gap:16px;
+      align-items:start;
     }
 
-    .select-box {
-      transform: scale(1.2);
-      margin-top: 6px;
-      cursor: pointer;
-    }
-
-    .file-name,
-    .small-note,
-    .text-muted {
-      color: var(--text-soft) !important;
-    }
-
-    .label-custom {
-      font-size: 0.82rem;
-      color: var(--text-soft);
-      font-weight: 600;
-      margin-bottom: 4px;
-      display: block;
-    }
-
-    .form-control,
-    .form-select,
-    .form-control-sm {
-      background: var(--input-bg);
-      color: var(--text-main);
-      border: 1px solid var(--input-border);
-      border-radius: 10px;
-      padding: 9px 12px;
-      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .form-control::placeholder,
-    .form-select::placeholder,
-    .form-control-sm::placeholder {
-      color: var(--text-soft);
-    }
-
-    .form-control:focus,
-    .form-select:focus,
-    .form-control-sm:focus {
-      background: var(--input-bg);
-      color: var(--text-main);
-      border-color: var(--primary);
-      box-shadow: var(--input-focus-shadow);
-    }
-
-    .btn {
-      border-radius: 12px;
-      font-weight: 600;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
-      border: none;
-      box-shadow: 0 10px 20px rgba(37,99,235,0.18);
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #1d4ed8, #2563eb);
-    }
-
-    .loading-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: var(--loader-bg);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    .empty-state {
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 20px;
-      padding: 50px 20px;
-      box-shadow: var(--shadow-md);
-      text-align: center;
-      color: var(--text-soft);
-      border: 1px solid var(--border-soft);
-    }
-
-    .modal-content {
-      background: var(--modal-bg);
-      color: var(--text-main);
-      border: 1px solid var(--border-soft) !important;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    .modal-header {
-      border-bottom: 1px solid var(--border-soft);
-    }
-
-    .modal-img-wrap {
-      background: var(--modal-image-bg);
-      border-radius: 16px;
-      overflow: auto;
-      text-align: center;
-      padding: 12px;
-      min-height: 320px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .modal-img-wrap img {
-      max-width: 100%;
-      max-height: 78vh;
-      object-fit: contain;
-      transition: transform 0.2s ease;
-      transform-origin: center center;
-    }
-
-    .viewer-toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      margin-top: 14px;
-    }
-
-    body.dark-mode .btn-close {
-      filter: invert(1) grayscale(100%);
-    }
-
-    .mode-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface-strong);
-      color: var(--text-main);
-      border: 1px solid var(--border-soft);
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 14px;
+    @media (max-width: 1650px){
+      .layout{
+        grid-template-columns: 320px 1fr 340px 420px;
       }
-      .main-header { padding: 22px; }
-      .form-section { padding: 18px; }
-      .img-container { min-height: 250px; }
-      .toolbar-actions {
-        flex-direction: column;
-        align-items: stretch;
+    }
+
+    @media (max-width: 1450px){
+      .layout{
+        grid-template-columns: 1fr;
       }
-      .toolbar-left, .toolbar-right {
-        width: 100%;
-        justify-content: center;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .card-header{
+      padding:18px 18px 12px;
+      border-bottom:1px solid rgba(255,255,255,.24);
+      background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.02));
+    }
+
+    body.theme-dark .card-header{
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+    }
+
+    .card-title{
+      margin:0 0 4px;
+      font-size:18px;
+      font-weight:800;
+    }
+
+    .card-desc{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .card-body{padding:18px}
+
+    .hidden{display:none !important}
+
+    .upload-panel{
+      display:block;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.64), rgba(255,255,255,.28));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+      padding:18px;
+      cursor:pointer;
+      transition:border-color .2s ease, transform .18s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .upload-panel:hover{
+      transform:translateY(-1px);
+      border-color:rgba(91,124,255,.32);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.9),
+        0 10px 24px rgba(91,124,255,.12);
+    }
+
+    .upload-panel.is-dragover{
+      border-color:#60a5fa;
+      background:linear-gradient(180deg, rgba(239,246,255,.94), rgba(255,255,255,.50));
+      box-shadow:0 10px 26px rgba(96,165,250,.15);
+    }
+
+    body.theme-dark .upload-panel{
+      background:linear-gradient(180deg, rgba(30,41,59,.66), rgba(17,24,39,.46));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+    body.theme-dark .upload-panel.is-dragover{
+      background:linear-gradient(180deg, rgba(37,99,235,.18), rgba(17,24,39,.58));
+    }
+
+    .upload-top{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .upload-icon-wrap{
+      width:60px;
+      height:60px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      background:linear-gradient(135deg, rgba(255,183,71,.18), rgba(91,124,255,.16));
+      color:var(--primary-2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    }
+
+    body.theme-dark .upload-icon-wrap{
+      color:#bfd1ff;
+      background:linear-gradient(135deg, rgba(255,183,71,.14), rgba(91,124,255,.18));
+    }
+
+    .upload-icon{
+      width:28px;height:28px;
+      display:block;
+    }
+
+    .upload-title{
+      font-size:16px;
+      font-weight:900;
+      margin-bottom:4px;
+    }
+
+    .upload-subtitle{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .upload-bottom{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .upload-pill{
+      font-size:12px;
+      font-weight:800;
+      color:var(--text);
+      background:var(--chip-bg);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 10px;
+    }
+
+    .toolbar,.actions-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .toolbar{margin-top:14px}
+
+    .queue-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height:74vh;
+      overflow:auto;
+      padding-right:2px;
+      margin-top:14px;
+    }
+
+    .queue-item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:var(--panel-bg);
+      cursor:pointer;
+      transition:.18s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .queue-item:hover{
+      border-color:rgba(91,124,255,.28);
+      box-shadow:0 8px 22px rgba(91,124,255,.10);
+    }
+
+    .queue-item.active{
+      border-color:#7fa0ff;
+      background:linear-gradient(180deg, rgba(236,242,255,.88), rgba(255,255,255,.78));
+      box-shadow:0 12px 26px rgba(91,124,255,.10);
+    }
+
+    body.theme-dark .queue-item.active{
+      background:linear-gradient(180deg, rgba(37,99,235,.14), rgba(17,24,39,.76));
+    }
+
+    .queue-top{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:flex-start;
+      margin-bottom:6px;
+    }
+
+    .queue-name{
+      font-size:14px;
+      font-weight:700;
+      line-height:1.4;
+      word-break:break-word;
+    }
+
+    .queue-meta{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:11px;
+      font-weight:800;
+      white-space:nowrap;
+      border:1px solid transparent;
+    }
+
+    .badge.pending{background:#f1f5f9;color:#475569}
+    .badge.processing{background:#dbeafe;color:#1d4ed8}
+    .badge.ready{background:#dbeafe;color:#1d4ed8}
+    .badge.saved{background:#dcfce7;color:#166534}
+    .badge.error{background:#fee2e2;color:#991b1b}
+
+    body.theme-dark .badge.pending{background:rgba(148,163,184,.14);color:#cbd5e1}
+    body.theme-dark .badge.processing,
+    body.theme-dark .badge.ready{background:rgba(59,130,246,.18);color:#bfdbfe}
+    body.theme-dark .badge.saved{background:rgba(34,197,94,.16);color:#bbf7d0}
+    body.theme-dark .badge.error{background:rgba(239,68,68,.16);color:#fecaca}
+
+    .queue-actions{
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .mini-btn{
+      border:none;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      transition:transform .16s ease, opacity .16s ease;
+    }
+
+    .mini-btn:hover{transform:translateY(-1px)}
+    .mini-btn.remove{background:#fef2f2;color:#991b1b}
+    .mini-btn.select{background:#eff6ff;color:#1d4ed8}
+
+    body.theme-dark .mini-btn.remove{background:rgba(239,68,68,.16);color:#fecaca}
+    body.theme-dark .mini-btn.select{background:rgba(59,130,246,.16);color:#bfdbfe}
+
+    .preview-box{
+      min-height: 460px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.46), var(--preview-bg));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      position:relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+    }
+
+    body.theme-dark .preview-box{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), var(--preview-bg));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    .preview-image-wrap{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:auto;
+      padding:16px;
+    }
+
+    .preview-box img{
+      max-width:100%;
+      max-height:760px;
+      object-fit:contain;
+      display:block;
+      transform-origin:center center;
+      transition:transform .15s ease;
+    }
+
+    .preview-placeholder{
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+      padding:28px;
+    }
+
+    .pdf-box{text-align:center;padding:28px}
+    .pdf-box .icon{font-size:64px;margin-bottom:12px}
+
+    .section-gap{margin-top:16px}
+
+    .status-panel{
+      display:none;
+      margin-top:14px;
+      border-radius:16px;
+      padding:12px 14px;
+      font-size:14px;
+      white-space:pre-wrap;
+      line-height:1.6;
+      border:1px solid transparent;
+      box-shadow:0 6px 18px rgba(0,0,0,.04);
+    }
+
+    .status-panel.info{display:block;background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+    .status-panel.success{display:block;background:#f0fdf4;color:#166534;border-color:#bbf7d0}
+    .status-panel.error{display:block;background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .status-panel.warn{display:block;background:#fffbeb;color:#92400e;border-color:#fde68a}
+
+    body.theme-dark .status-panel.info{background:rgba(59,130,246,.14);color:#bfdbfe;border-color:rgba(96,165,250,.24)}
+    body.theme-dark .status-panel.success{background:rgba(34,197,94,.14);color:#bbf7d0;border-color:rgba(74,222,128,.20)}
+    body.theme-dark .status-panel.error{background:rgba(239,68,68,.14);color:#fecaca;border-color:rgba(248,113,113,.22)}
+    body.theme-dark .status-panel.warn{background:rgba(251,146,60,.14);color:#fdba74;border-color:rgba(251,191,36,.18)}
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:680px){
+      .form-grid{grid-template-columns:1fr}
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom:12px;
+    }
+
+    .field.full{grid-column:1 / -1}
+
+    .field label{
+      font-size:13px;
+      font-weight:700;
+      color:var(--text);
+    }
+
+    .field input,.field textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      outline:none;
+      background:var(--input-bg);
+      color:var(--text);
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .field textarea{
+      min-height: 520px;
+      resize:vertical;
+      font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+      line-height:1.6;
+    }
+
+    .field input:focus,.field textarea:focus{
+      border-color:#93c5fd;
+      box-shadow:0 0 0 4px rgba(59,130,246,.12);
+    }
+
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+
+    @media (max-width:680px){
+      .summary{grid-template-columns:1fr}
+    }
+
+    .summary-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,.50), rgba(255,255,255,.16));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.62);
+    }
+
+    body.theme-dark .summary-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    .summary-label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .summary-value{font-size:18px;font-weight:800}
+
+    .empty-note{
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.7;
+      text-align:center;
+      padding:20px;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+    }
+
+    .icon-btn{
+      min-width:48px;
+      height:44px;
+      padding:0 10px;
+      font-size:20px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    .icon-btn:hover:not(:disabled){
+      transform:translateY(-1px);
+      box-shadow:0 6px 14px rgba(0,0,0,.08);
+    }
+
+    @media (max-width: 900px){
+      .header-actions{
+        width:100%;
+        margin-left:0;
+        justify-content:space-between;
       }
-      .header-top {
-        justify-content: center;
+
+      .brand-left{
+        width:100%;
+      }
+    }
+
+    @media (max-width: 768px){
+      .title-main{font-size:24px;}
+      .title-sub{font-size:17px;}
+      .brand-logo-wrap{
+        width:68px;
+        height:68px;
+        border-radius:18px;
+      }
+      .brand-logo{
+        max-width:50px;
+        max-height:50px;
+      }
+
+      .app{
+        padding: 0 12px 24px;
       }
     }
   </style>
 </head>
 <body>
+  <div class="bg-grid"></div>
 
-  <div id="loader" class="loading-overlay">
-    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;"></div>
-    <div class="mt-3 fw-bold text-primary" id="loaderText">กำลังประมวลผล...</div>
-    <div class="text-muted small mt-1">กรุณารอสักครู่ AI กำลังอ่านข้อมูลใบเสร็จ</div>
-  </div>
-
-  <div class="container" style="max-width: 1140px;">
-    <!-- Header -->
-    <div class="main-header">
-      <div class="header-inner">
-        <div class="header-top">
-          <button id="themeToggleBtn" class="theme-toggle" type="button" onclick="toggleTheme()">
-            <span id="themeToggleIcon">🌙</span>
-            <span id="themeToggleText">Dark mode</span>
-          </button>
-        </div>
-
-        <div class="text-center">
-          <div class="d-flex justify-content-center mb-2">
-            <span class="mode-badge" id="themeBadge">☀️ Light</span>
+  <div class="app">
+    <div class="header">
+      <div class="brand">
+        <div class="brand-left">
+          <div class="brand-logo-wrap">
+            <img src="logo.png" alt="logo" class="brand-logo" />
           </div>
 
-          <h2 class="fw-bold mb-2">⛽ ระบบตรวจสอบและบันทึกข้อมูลใบเสร็จการเติมน้ำมันเชื้อเพลิง</h2>
-          <p class="text-muted mb-3">
-            สามารถ Upload รูปภาพได้หลายรายการ
-          </p>
+          <div class="brand-text">
+            <h1 class="title title-gradient title-main">ระบบตรวจสอบข้อมูลใบเสร็จการเติมน้ำมัน</h1>
+            <h2 class="title title-gradient title-sub">(Petroleum Receipt Analysis System)</h2>
+            <p class="subtitle">อัปโหลดหลายไฟล์ → OCR → ตรวจ/แก้ไข → ยืนยันบันทึก</p>
 
-          <div class="row justify-content-center mt-4">
-            <div class="col-lg-8">
-              <input type="file" id="files" class="form-control form-control-lg mb-3" multiple accept="image/*">
-              <div class="d-flex justify-content-center flex-wrap gap-2">
-                <button class="btn btn-primary btn-lg shadow-sm fw-bold" onclick="processImages()">
-                  เริ่มตรวจสอบรูปภาพใบเสร็จ
-                </button>
+            <div class="top-summary">
+              <div class="chip">ทั้งหมด: <span id="countAll">0</span></div>
+              <div class="chip">พร้อมตรวจ: <span id="countReady">0</span></div>
+              <div class="chip">บันทึกแล้ว: <span id="countSaved">0</span></div>
+              <div class="chip">ผิดพลาด: <span id="countError">0</span></div>
+            </div>
+          </div>
+        </div>
 
-                <button class="btn btn-outline-secondary btn-lg shadow-sm fw-bold" onclick="openGoogleSheet()">
-                  📄 เปิด Sheet
-                </button>
+        <div class="header-actions">
+          <button
+            class="theme-toggle"
+            id="btnThemeToggle"
+            type="button"
+            aria-label="สลับโหมดสว่างและมืด"
+            aria-pressed="false"
+            title="สลับ Light / Dark mode"
+          >
+            <span class="theme-toggle-track"></span>
+            <span class="theme-toggle-label"><span>☀️</span><span>🌙</span></span>
+            <span class="theme-toggle-thumb">
+              <span class="theme-icon-sun">☀️</span>
+              <span class="theme-icon-moon">🌙</span>
+            </span>
+          </button>
+
+          <a
+            class="btn btn-sheet btn-link"
+            id="btnOpenSheet"
+            href="https://docs.google.com/spreadsheets/d/1R2kKi3os2a0MgqDiVtmfTq5n6frd69GnbMVWPToNH7M/edit"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="เปิด Google Sheet"
+            aria-label="เปิด Google Sheet"
+          >
+            📊 เปิด Google Sheet
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT: FILE QUEUE -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">รายการไฟล์</h2>
+          <p class="card-desc">อัปโหลดหลายไฟล์ แล้วเลือกไฟล์เพื่อตรวจสอบทีละรายการ</p>
+        </div>
+        <div class="card-body">
+          <label class="upload-panel" id="dropzone" for="fileInput">
+            <input id="fileInput" class="hidden" type="file" accept="image/*,.pdf" multiple />
+
+            <div class="upload-top">
+              <div class="upload-icon-wrap">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 16V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8.5 10.5L12 7l3.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M20 16.5v.8A2.7 2.7 0 0 1 17.3 20H6.7A2.7 2.7 0 0 1 4 17.3v-.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </div>
 
-              <div class="small-note mt-3">
-                หลังสแกนแล้ว ให้เลือกใบเสร็จที่ต้องการบันทึกจาก checkbox ของแต่ละรายการ
+              <div class="upload-text">
+                <div class="upload-title">อัปโหลดรูปภาพใบเสร็จหลายไฟล์</div>
+                <div class="upload-subtitle">
+                  แตะเพื่อเลือกไฟล์ หรือ ลากไฟล์มาวางที่นี่
+                </div>
               </div>
+            </div>
+
+            <div class="upload-bottom">
+              <div class="upload-pill">รองรับรูปภาพ</div>
+              <div class="upload-pill">รองรับ PDF</div>
+              <div class="upload-pill">หลายไฟล์</div>
+            </div>
+          </label>
+
+          <div class="toolbar">
+            <button class="btn btn-primary" id="btnOcrCurrent" disabled>OCR ไฟล์นี้</button>
+            <button class="btn btn-secondary" id="btnOcrAll" disabled>OCR ทั้งหมด</button>
+            <button class="btn btn-warning" id="btnSaveAllReady" disabled>บันทึกทั้งหมดที่พร้อม</button>
+            <button class="btn btn-danger" id="btnClearAll">ล้างทั้งหมด</button>
+          </div>
+
+          <div id="globalStatus" class="status-panel"></div>
+
+          <div class="queue-list" id="queueList">
+            <div class="empty-note">ยังไม่มีไฟล์ในรายการ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMAGE PREVIEW -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">ตัวอย่างไฟล์</h2>
+          <p class="card-desc">ดูรูปใบเสร็จ พร้อมหมุนและซูม</p>
+        </div>
+        <div class="card-body">
+          <div class="actions-row" style="margin-bottom:12px;">
+            <button class="btn btn-secondary icon-btn" id="btnRotateLeft" disabled title="หมุนซ้าย" aria-label="หมุนซ้าย">↶</button>
+            <button class="btn btn-secondary icon-btn" id="btnRotateRight" disabled title="หมุนขวา" aria-label="หมุนขวา">↷</button>
+            <button class="btn btn-secondary icon-btn" id="btnZoomOut" disabled title="ซูมออก" aria-label="ซูมออก">🔍−</button>
+            <button class="btn btn-secondary icon-btn" id="btnZoomIn" disabled title="ซูมเข้า" aria-label="ซูมเข้า">🔍+</button>
+            <button class="btn btn-secondary icon-btn" id="btnResetView" disabled title="รีเซ็ตมุมมอง" aria-label="รีเซ็ตมุมมอง">⟲</button>
+          </div>
+
+          <div class="preview-box" id="previewBox">
+            <div class="preview-placeholder" id="previewPlaceholder">ยังไม่ได้เลือกไฟล์</div>
+
+            <div class="preview-image-wrap hidden" id="previewImageWrap">
+              <img id="previewImage" alt="preview" />
+            </div>
+
+            <div id="previewPdf" class="pdf-box hidden">
+              <div class="icon">📄</div>
+              <div id="previewPdfName" style="font-weight:800;"></div>
+              <div class="small" style="margin-top:8px;">ไฟล์ PDF จะแสดงชื่อไฟล์แทน preview</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAW OCR TEXT -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">ข้อความ OCR (Raw Text)</h2>
+          <p class="card-desc">ใช้สำหรับตรวจสอบและคัดลอกข้อความดิบจาก OCR</p>
+        </div>
+        <div class="card-body">
+          <div class="actions-row" style="margin-bottom:8px;">
+            <button class="btn btn-secondary" id="btnCopyOcrText" disabled>Copy OCR Text</button>
+          </div>
+
+          <div class="field">
+            <label for="ocrRawText">ข้อความ OCR</label>
+            <textarea id="ocrRawText" readonly placeholder="เมื่อ OCR แล้ว ข้อความดิบจาก OCR จะแสดงที่นี่"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: REVIEW / EDIT -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">ตรวจสอบ / แก้ไข / ยืนยัน</h2>
+          <p class="card-desc">แก้ข้อมูลของไฟล์ที่เลือก แล้วกดยืนยันบันทึก</p>
+        </div>
+        <div class="card-body">
+          <div id="editorEmpty" class="empty-note">เลือกไฟล์จากรายการด้านซ้ายก่อน</div>
+
+          <div id="editorPanel" class="hidden">
+            <div class="actions-row" style="margin-bottom:14px;">
+              <button class="btn btn-primary" id="btnOcrSelected">OCR ไฟล์ที่เลือก</button>
+              <button class="btn btn-success" id="btnSaveSelected">ยืนยันและบันทึกไฟล์นี้</button>
+              <button class="btn btn-danger" id="btnRemoveSelected">ลบไฟล์นี้</button>
+            </div>
+
+            <div id="itemStatus" class="status-panel"></div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="tax_invoice">เลขที่ใบกำกับภาษี</label>
+                <input id="tax_invoice" type="text" />
+              </div>
+
+              <div class="field">
+                <label for="tax_id">TAX ID</label>
+                <input id="tax_id" type="text" placeholder="เลขผู้เสียภาษี 13 หลัก" />
+              </div>
+
+              <div class="field">
+                <label for="date">วันที่</label>
+                <input id="date" type="text" placeholder="เช่น 01/02/2026 หรือ 1 ก.พ. 2569" />
+              </div>
+
+              <div class="field full">
+                <label for="company">บริษัท / ปั๊มน้ำมัน</label>
+                <input id="company" type="text" />
+              </div>
+
+              <div class="field">
+                <label for="fuel_type">ประเภทน้ำมัน</label>
+                <input id="fuel_type" type="text" />
+              </div>
+
+              <div class="field">
+                <label for="car_plate">ทะเบียนรถ</label>
+                <input id="car_plate" type="text" />
+              </div>
+
+              <div class="field">
+                <label for="price_per_liter">ราคาต่อลิตร</label>
+                <input id="price_per_liter" type="number" step="0.01" />
+              </div>
+
+              <div class="field">
+                <label for="liters">จำนวนลิตร</label>
+                <input id="liters" type="number" step="0.001" />
+              </div>
+
+              <div class="field">
+                <label for="total_amount">ยอดรวม</label>
+                <input id="total_amount" type="number" step="0.01" />
+              </div>
+
+              <div class="field">
+                <label for="mileage">เลขไมล์</label>
+                <input id="mileage" type="text" />
+              </div>
+            </div>
+
+            <div class="summary">
+              <div class="summary-card">
+                <div class="summary-label">ยอดก่อน VAT (ประมาณ)</div>
+                <div class="summary-value" id="sumNet">0.00</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">VAT 7% (ประมาณ)</div>
+                <div class="summary-value" id="sumVat">0.00</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">ยอดรวม</div>
+                <div class="summary-value" id="sumTotal">0.00</div>
+              </div>
+            </div>
+
+            <div class="small section-gap">
+              หาก LLM สกัดข้อมูลผิด สามารถใช้ข้อความ OCR จากกล่องตรงกลางเพื่อตรวจสอบหรือ copy ไปแก้ไขได้ทันที
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Summary Toolbar -->
-    <div id="summaryBar" class="summary-bar">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-          <span class="summary-pill">📄 รายการทั้งหมด: <span id="countAll">0</span></span>
-          <span class="summary-pill">✅ เลือกอยู่: <span id="countSelected">0</span></span>
-          <span class="summary-pill">💾 บันทึกแล้ว: <span id="countSaved">0</span></span>
-          <span class="summary-pill">⏳ รอการบันทึก: <span id="countPending">0</span></span>
-        </div>
-      </div>
-
-      <div class="toolbar-actions">
-        <div class="toolbar-left">
-          <div class="form-check me-2">
-            <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
-            <label class="form-check-label fw-semibold" for="selectAllCheckbox">เลือกทั้งหมด</label>
-          </div>
-
-          <button class="btn btn-outline-secondary btn-sm" onclick="clearAllSelections()">
-            ยกเลิกการเลือกทั้งหมด
-          </button>
-
-          <button class="btn btn-success btn-sm" id="saveSelectedBtn" onclick="saveSelectedReceipts()" disabled>
-            บันทึกใบเสร็จที่เลือก
-          </button>
-        </div>
-
-        <div class="toolbar-right">
-          <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedReceipts()">
-            ลบรายการที่เลือก
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Preview -->
-    <div id="previewArea">
-      <div class="empty-state" id="emptyState">
-        <div style="font-size: 50px;">🧾</div>
-        <h5 class="fw-bold mt-3">ยังไม่มีใบเสร็จที่สแกน</h5>
-        <div>เลือกไฟล์ภาพแล้วกดปุ่ม “เริ่มสแกนใบเสร็จด้วย AI”</div>
-      </div>
-    </div>
   </div>
-
-  <!-- Image Modal -->
-  <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg" style="border-radius:18px;">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold">🔍 ดูรูปใบเสร็จ</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="modal-img-wrap">
-            <img id="modalImage" src="" alt="Receipt Preview">
-          </div>
-
-          <div class="viewer-toolbar">
-            <button class="btn btn-outline-secondary" onclick="rotateModalImage(-90)">↺ หมุนซ้าย</button>
-            <button class="btn btn-outline-secondary" onclick="rotateModalImage(90)">↻ หมุนขวา</button>
-
-            <button class="btn btn-outline-primary" onclick="zoomModalImage(0.2)">＋ Zoom</button>
-            <button class="btn btn-outline-primary" onclick="zoomModalImage(-0.2)">－ Zoom</button>
-
-            <button class="btn btn-outline-dark" onclick="resetModalView()">รีเซ็ต</button>
-          </div>
-
-          <div class="mt-3 text-muted small text-center" id="modalFileName"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    /************************************************
-     * CONFIG
-     ************************************************/
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzW0kFpaALrKzr5N8EKMQB6JuHzlAy_IYu34EEYVERC09g0zxU4_5UsEY5rxZDO8VZv/exec';
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fPeOMKqiohAi9chEy5PBkvTiZ5ulvHaimpZ9U1g0_70/edit';
-    const THEME_KEY = 'fuel-receipt-theme';
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX65vzZPSE-l4eq1aflCKpPT3N68Zfk93qjij6XmoxAxyO4RHJyQd6jqa4VDR3Jts/exec";
+    const THEME_KEY = "petroleum_receipt_theme";
 
-    /************************************************
-     * STATE
-     ************************************************/
-    const receiptStore = {};
-    let imageModalInstance = null;
-    let currentModalReceiptId = null;
-    let currentModalScale = 1;
+    const state = {
+      items: [],
+      selectedId: null,
+      busy: false
+    };
 
-    /************************************************
-     * THEME MODE
-     ************************************************/
-    function initTheme() {
-      const savedTheme = localStorage.getItem(THEME_KEY);
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-      setTheme(theme, false);
+    const els = {
+      body: document.body,
+      dropzone: document.getElementById("dropzone"),
+      fileInput: document.getElementById("fileInput"),
+      queueList: document.getElementById("queueList"),
+      globalStatus: document.getElementById("globalStatus"),
+      itemStatus: document.getElementById("itemStatus"),
+
+      btnThemeToggle: document.getElementById("btnThemeToggle"),
+
+      btnOcrCurrent: document.getElementById("btnOcrCurrent"),
+      btnOcrAll: document.getElementById("btnOcrAll"),
+      btnSaveAllReady: document.getElementById("btnSaveAllReady"),
+      btnClearAll: document.getElementById("btnClearAll"),
+
+      previewPlaceholder: document.getElementById("previewPlaceholder"),
+      previewImageWrap: document.getElementById("previewImageWrap"),
+      previewImage: document.getElementById("previewImage"),
+      previewPdf: document.getElementById("previewPdf"),
+      previewPdfName: document.getElementById("previewPdfName"),
+
+      btnRotateLeft: document.getElementById("btnRotateLeft"),
+      btnRotateRight: document.getElementById("btnRotateRight"),
+      btnZoomOut: document.getElementById("btnZoomOut"),
+      btnZoomIn: document.getElementById("btnZoomIn"),
+      btnResetView: document.getElementById("btnResetView"),
+
+      btnCopyOcrText: document.getElementById("btnCopyOcrText"),
+      ocrRawText: document.getElementById("ocrRawText"),
+
+      editorEmpty: document.getElementById("editorEmpty"),
+      editorPanel: document.getElementById("editorPanel"),
+      btnOcrSelected: document.getElementById("btnOcrSelected"),
+      btnSaveSelected: document.getElementById("btnSaveSelected"),
+      btnRemoveSelected: document.getElementById("btnRemoveSelected"),
+
+      countAll: document.getElementById("countAll"),
+      countReady: document.getElementById("countReady"),
+      countSaved: document.getElementById("countSaved"),
+      countError: document.getElementById("countError"),
+
+      fields: {
+        tax_invoice: document.getElementById("tax_invoice"),
+        tax_id: document.getElementById("tax_id"),
+        date: document.getElementById("date"),
+        company: document.getElementById("company"),
+        fuel_type: document.getElementById("fuel_type"),
+        price_per_liter: document.getElementById("price_per_liter"),
+        liters: document.getElementById("liters"),
+        total_amount: document.getElementById("total_amount"),
+        car_plate: document.getElementById("car_plate"),
+        mileage: document.getElementById("mileage")
+      },
+
+      sumNet: document.getElementById("sumNet"),
+      sumVat: document.getElementById("sumVat"),
+      sumTotal: document.getElementById("sumTotal")
+    };
+
+    init();
+
+    function init() {
+      applySavedTheme();
+      bindEvents();
+      renderAll();
+    }
+
+    function bindEvents() {
+      els.fileInput.addEventListener("change", async (e) => {
+        await addFiles(Array.from(e.target.files || []));
+        els.fileInput.value = "";
+      });
+
+      els.dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        els.dropzone.classList.add("is-dragover");
+      });
+
+      els.dropzone.addEventListener("dragleave", () => {
+        els.dropzone.classList.remove("is-dragover");
+      });
+
+      els.dropzone.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        els.dropzone.classList.remove("is-dragover");
+        await addFiles(Array.from(e.dataTransfer.files || []));
+      });
+
+      els.btnThemeToggle.addEventListener("click", toggleTheme);
+
+      els.btnOcrCurrent.addEventListener("click", () => {
+        const item = getSelectedItem();
+        if (item) ocrItem(item.id);
+      });
+
+      els.btnOcrSelected.addEventListener("click", () => {
+        const item = getSelectedItem();
+        if (item) ocrItem(item.id);
+      });
+
+      els.btnOcrAll.addEventListener("click", ocrAllItems);
+      els.btnSaveSelected.addEventListener("click", saveSelectedItem);
+      els.btnSaveAllReady.addEventListener("click", saveAllReadyItems);
+      els.btnRemoveSelected.addEventListener("click", removeSelectedItem);
+      els.btnClearAll.addEventListener("click", clearAllItems);
+
+      Object.entries(els.fields).forEach(([key, input]) => {
+        input.addEventListener("input", () => {
+          const item = getSelectedItem();
+          if (!item) return;
+
+          item.formData[key] = ["price_per_liter","liters","total_amount"].includes(key)
+            ? toNumberSafe(input.value)
+            : sanitizeText(input.value);
+
+          updateSummary(item.formData);
+        });
+      });
+
+      els.btnRotateLeft.addEventListener("click", () => adjustRotation(-90));
+      els.btnRotateRight.addEventListener("click", () => adjustRotation(90));
+      els.btnZoomOut.addEventListener("click", () => adjustScale(-0.1));
+      els.btnZoomIn.addEventListener("click", () => adjustScale(0.1));
+      els.btnResetView.addEventListener("click", resetViewTransform);
+
+      els.btnCopyOcrText.addEventListener("click", async () => {
+        const item = getSelectedItem();
+        if (!item || !item.rawText) return;
+        try {
+          await navigator.clipboard.writeText(item.rawText);
+          showItemStatus("คัดลอกข้อความ OCR แล้ว", "success");
+        } catch (err) {
+          showItemStatus("คัดลอกไม่สำเร็จ: " + err.message, "error");
+        }
+      });
+    }
+
+    function applySavedTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDark = saved ? saved === "dark" : prefersDark;
+
+      document.body.classList.toggle("theme-dark", isDark);
+      updateThemeButtonA11y(isDark);
     }
 
     function toggleTheme() {
-      const isDark = document.body.classList.contains('dark-mode');
-      setTheme(isDark ? 'light' : 'dark', true);
+      const isDark = !document.body.classList.contains("theme-dark");
+      document.body.classList.toggle("theme-dark", isDark);
+      localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+      updateThemeButtonA11y(isDark);
     }
 
-    function setTheme(theme, persist = true) {
-      const isDark = theme === 'dark';
-      document.body.classList.toggle('dark-mode', isDark);
-
-      const toggleIcon = document.getElementById('themeToggleIcon');
-      const toggleText = document.getElementById('themeToggleText');
-      const themeBadge = document.getElementById('themeBadge');
-
-      if (toggleIcon) toggleIcon.textContent = isDark ? '☀️' : '🌙';
-      if (toggleText) toggleText.textContent = isDark ? 'Light mode' : 'Dark mode';
-      if (themeBadge) themeBadge.textContent = isDark ? '🌙 Dark' : '☀️ Light';
-
-      if (persist) {
-        localStorage.setItem(THEME_KEY, theme);
-      }
+    function updateThemeButtonA11y(isDark) {
+      if (!els.btnThemeToggle) return;
+      els.btnThemeToggle.setAttribute("aria-pressed", isDark ? "true" : "false");
+      els.btnThemeToggle.setAttribute("title", isDark ? "เปลี่ยนเป็น Light mode" : "เปลี่ยนเป็น Dark mode");
     }
 
-    /************************************************
-     * API
-     ************************************************/
-    async function callApi(action, payload = {}) {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        redirect: 'follow',
-        body: JSON.stringify({
-          action,
-          ...payload
-        })
-      });
+    async function addFiles(files) {
+      if (!files.length) return;
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      const maxSize = 10 * 1024 * 1024;
+      const validFiles = files.filter(f => f.size <= maxSize);
 
-      return await response.json();
-    }
-
-    async function pingBackend() {
-      try {
-        const res = await callApi('ping');
-        alert('API ใช้งานได้: ' + JSON.stringify(res, null, 2));
-      } catch (err) {
-        alert('เรียก API ไม่สำเร็จ: ' + (err.message || err));
-      }
-    }
-
-    /************************************************
-     * MAIN FLOW
-     ************************************************/
-    async function processImages() {
-      const fileInput = document.getElementById('files');
-      const previewArea = document.getElementById('previewArea');
-      const loader = document.getElementById('loader');
-      const loaderText = document.getElementById('loaderText');
-
-      if (!fileInput.files || fileInput.files.length === 0) {
-        alert('กรุณาเลือกไฟล์รูปภาพก่อนครับ');
+      if (!validFiles.length) {
+        showGlobalStatus("ไม่มีไฟล์ที่ใช้งานได้ หรือไฟล์ใหญ่เกิน 10MB", "warn");
         return;
       }
 
-      previewArea.innerHTML = '';
-      Object.keys(receiptStore).forEach(k => delete receiptStore[k]);
-
-      loader.style.display = 'flex';
-
-      try {
-        for (let i = 0; i < fileInput.files.length; i++) {
-          const file = fileInput.files[i];
-          const receiptId = createReceiptId(i);
-
-          loaderText.innerText = `กำลังอ่านรูปที่ ${i + 1} จาก ${fileInput.files.length}...`;
-
-          const resizedFileData = await resizeImage(file);
-
-          receiptStore[receiptId] = {
-            fileData: resizedFileData,
-            saved: false,
-            deleted: false,
-            selected: false,
-            rotation: 0
-          };
-
-          loaderText.innerText = `กำลังวิเคราะห์ใบเสร็จรูปที่ ${i + 1}...`;
-
-          const result = await callApi('ocr', {
-            payload: resizedFileData
-          });
-
-          if (result && result.success) {
-            addReceiptCard(receiptId, result.data);
-          } else {
-            addErrorCard(receiptId, file.name, result?.error || 'ไม่ทราบสาเหตุ');
+      for (const file of validFiles) {
+        const base64 = await fileToBase64(file);
+        state.items.push({
+          id: randomId(),
+          requestId: randomId(),
+          file,
+          fileData: {
+            name: file.name,
+            type: file.type || guessMimeTypeByName(file.name),
+            size: file.size,
+            data: base64
+          },
+          previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+          status: "pending",
+          error: "",
+          formData: defaultFormData(),
+          rawText: "",
+          ocrDone: false,
+          saveResult: null,
+          view: {
+            rotation: 0,
+            scale: 1
           }
+        });
+      }
+
+      if (!state.selectedId && state.items.length) {
+        state.selectedId = state.items[0].id;
+      }
+
+      renderAll();
+      showGlobalStatus(`เพิ่มไฟล์แล้ว ${validFiles.length} ไฟล์`, "success");
+    }
+
+    function clearAllItems() {
+      state.items.forEach(item => {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+      });
+      state.items = [];
+      state.selectedId = null;
+      clearGlobalStatus();
+      clearItemStatus();
+      renderAll();
+    }
+
+    function removeSelectedItem() {
+      const item = getSelectedItem();
+      if (!item) return;
+      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+
+      const idx = state.items.findIndex(x => x.id === item.id);
+      if (idx >= 0) state.items.splice(idx, 1);
+
+      state.selectedId = state.items[Math.max(0, idx - 1)]?.id || state.items[0]?.id || null;
+      clearItemStatus();
+      renderAll();
+    }
+
+    async function ocrItem(itemId) {
+      const item = state.items.find(x => x.id === itemId);
+      if (!item) return;
+
+      try {
+        setBusy(true);
+        item.status = "processing";
+        item.error = "";
+        renderAll();
+
+        showItemStatus(`กำลังอ่าน OCR: ${item.file.name}`, "info");
+
+        const result = await callBackendPost({
+          action: "ocr",
+          requestId: item.requestId,
+          payload: item.fileData
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || "OCR ไม่สำเร็จ");
         }
+
+        item.rawText = result.raw_text || "";
+        item.formData = normalizeFormData(result.data || {});
+        item.ocrDone = true;
+        item.status = "ready";
+        item.error = "";
+
+        renderAll();
+        showItemStatus(`OCR สำเร็จ: ${item.file.name}\nตรวจสอบข้อมูลแล้วกดยืนยันบันทึกได้เลย`, "success");
       } catch (err) {
         console.error(err);
-        alert('เกิดข้อผิดพลาด: ' + (err.message || err));
+        item.status = "error";
+        item.error = err.message || String(err);
+        renderAll();
+        showItemStatus(`OCR ล้มเหลว: ${item.file.name}\n${item.error}`, "error");
       } finally {
-        loader.style.display = 'none';
-        updateSummary();
+        setBusy(false);
       }
     }
 
-    /************************************************
-     * RENDER CARD
-     ************************************************/
-    function addReceiptCard(receiptId, data) {
-      const previewArea = document.getElementById('previewArea');
-      const fileData = receiptStore[receiptId].fileData;
-      const imgSrc = `data:${fileData.type || 'image/jpeg'};base64,${fileData.data}`;
+    async function ocrAllItems() {
+      if (!state.items.length) return;
+      const targets = state.items.filter(item => item.status === "pending" || item.status === "error");
 
-      const safe = {
-        tax_invoice: data?.tax_invoice || '-',
-        date: data?.date || '-',
-        company: data?.company || '-',
-        fuel_type: data?.fuel_type || '-',
-        total_amount: data?.total_amount ?? 0,
-        price_per_liter: data?.price_per_liter ?? 0,
-        liters: data?.liters ?? 0,
-        car_plate: data?.car_plate || '-',
-        mileage: data?.mileage || '-'
-      };
-
-      const html = `
-        <div class="receipt-card card" id="card-${receiptId}">
-          <div class="row g-0">
-            <div class="col-lg-5 img-container" onclick="openImageModal('${receiptId}')">
-              <img src="${imgSrc}" alt="Receipt Image">
-            </div>
-
-            <div class="col-lg-7 form-section">
-              <div class="card-top">
-                <div class="card-top-left">
-                  <input class="form-check-input select-box"
-                         type="checkbox"
-                         id="check-${receiptId}"
-                         onchange="toggleReceiptSelection('${receiptId}', this.checked)">
-
-                  <div>
-                    <h5 class="fw-bold text-primary mb-1">📝 ตรวจสอบข้อมูลใบเสร็จ</h5>
-                    <div class="file-name">${escapeHtml(fileData.name || '-')}</div>
-                  </div>
-                </div>
-
-                <div class="d-flex gap-2 flex-wrap">
-                  <span class="badge bg-warning text-dark px-3 py-2" id="badge-${receiptId}">รอการยืนยัน</span>
-                  <button class="btn btn-outline-danger btn-sm" onclick="removeReceipt('${receiptId}')">ลบ</button>
-                </div>
-              </div>
-
-              <div class="row g-3">
-                ${inputField('inv', receiptId, 'เลขที่ใบกำกับภาษี', safe.tax_invoice)}
-                ${inputField('date', receiptId, 'วันที่ใบเสร็จ (วว/ดด/ปป)', safe.date)}
-                ${inputField('comp', receiptId, 'ชื่อบริษัท/สถานีบริการ', safe.company, 'col-12')}
-                ${inputField('fuel', receiptId, 'ประเภทน้ำมัน', safe.fuel_type)}
-                ${inputNumber('total', receiptId, 'ยอดรวมสุทธิ (รวม VAT)', safe.total_amount, '0.01', true)}
-                ${inputNumber('ppl', receiptId, 'ราคา/ลิตร', safe.price_per_liter, '0.001')}
-                ${inputNumber('lit', receiptId, 'จำนวนลิตร', safe.liters, '0.001')}
-                ${inputField('plate', receiptId, 'ทะเบียนรถ', safe.car_plate)}
-                ${inputField('mile', receiptId, 'เลขระยะทาง (KM)', safe.mileage, 'col-12')}
-              </div>
-
-              <div class="mt-4 d-flex gap-2 flex-wrap">
-                <button class="btn btn-success flex-grow-1"
-                        id="save-btn-${receiptId}"
-                        onclick="saveOneReceipt('${receiptId}')">
-                  บันทึกลง Sheet
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      previewArea.insertAdjacentHTML('beforeend', html);
-      updateSummary();
-    }
-
-    function addErrorCard(receiptId, fileName, errorMsg) {
-      const previewArea = document.getElementById('previewArea');
-      const fileData = receiptStore[receiptId]?.fileData;
-      const imgSrc = fileData ? `data:${fileData.type || 'image/jpeg'};base64,${fileData.data}` : '';
-
-      const html = `
-        <div class="receipt-card card border-danger" id="card-${receiptId}">
-          <div class="row g-0">
-            <div class="col-lg-5 img-container" ${fileData ? `onclick="openImageModal('${receiptId}')"` : ''}>
-              ${imgSrc ? `<img src="${imgSrc}" alt="Receipt Image">` : `<div class="text-white">ไม่สามารถแสดงภาพได้</div>`}
-            </div>
-
-            <div class="col-lg-7 form-section">
-              <div class="card-top">
-                <div class="card-top-left">
-                  <input class="form-check-input select-box"
-                         type="checkbox"
-                         id="check-${receiptId}"
-                         onchange="toggleReceiptSelection('${receiptId}', this.checked)">
-                  <div>
-                    <h5 class="fw-bold text-danger mb-1">❌ อ่านข้อมูลไม่สำเร็จ</h5>
-                    <div class="file-name">${escapeHtml(fileName || '-')}</div>
-                  </div>
-                </div>
-
-                <button class="btn btn-outline-danger btn-sm" onclick="removeReceipt('${receiptId}')">ลบ</button>
-              </div>
-
-              <div class="alert alert-danger mb-0">${escapeHtml(errorMsg || 'ไม่ทราบสาเหตุ')}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      previewArea.insertAdjacentHTML('beforeend', html);
-      updateSummary();
-    }
-
-    /************************************************
-     * SELECTION
-     ************************************************/
-    function toggleReceiptSelection(receiptId, checked) {
-      const item = receiptStore[receiptId];
-      if (!item || item.deleted) return;
-
-      item.selected = checked;
-      const card = document.getElementById(`card-${receiptId}`);
-      if (card) {
-        card.classList.toggle('selected', checked);
-      }
-
-      updateSummary();
-    }
-
-    function toggleSelectAll(checked) {
-      const ids = getActiveReceiptIds();
-
-      ids.forEach(id => {
-        const item = receiptStore[id];
-        if (!item || item.deleted) return;
-
-        item.selected = checked;
-
-        const cb = document.getElementById(`check-${id}`);
-        if (cb) cb.checked = checked;
-
-        const card = document.getElementById(`card-${id}`);
-        if (card) card.classList.toggle('selected', checked);
-      });
-
-      updateSummary();
-    }
-
-    function clearAllSelections() {
-      toggleSelectAll(false);
-    }
-
-    function getSelectedReceiptIds() {
-      return Object.keys(receiptStore).filter(id => {
-        const item = receiptStore[id];
-        return item && !item.deleted && item.selected;
-      });
-    }
-
-    /************************************************
-     * SAVE
-     ************************************************/
-    function saveOneReceipt(receiptId) {
-      saveReceiptInternal(receiptId, false);
-    }
-
-    async function saveSelectedReceipts() {
-      const selectedIds = getSelectedReceiptIds().filter(id => !receiptStore[id].saved);
-
-      if (selectedIds.length === 0) {
-        alert('กรุณาเลือกใบเสร็จที่ยังไม่บันทึกอย่างน้อย 1 รายการ');
+      if (!targets.length) {
+        showGlobalStatus("ไม่มีไฟล์ที่ต้อง OCR เพิ่ม", "warn");
         return;
       }
 
-      const loader = document.getElementById('loader');
-      const loaderText = document.getElementById('loaderText');
-      loader.style.display = 'flex';
-
-      let ok = 0;
-      let fail = 0;
+      setBusy(true);
+      clearGlobalStatus();
 
       try {
-        for (let i = 0; i < selectedIds.length; i++) {
-          loaderText.innerText = `กำลังบันทึก ${i + 1} / ${selectedIds.length}...`;
-          const success = await saveReceiptInternal(selectedIds[i], true);
-          if (success) ok++;
-          else fail++;
+        for (let i = 0; i < targets.length; i++) {
+          const item = targets[i];
+          state.selectedId = item.id;
+          renderAll();
+          showGlobalStatus(`กำลัง OCR (${i + 1}/${targets.length}) : ${item.file.name}`, "info");
+          await ocrItem(item.id);
         }
-      } catch (err) {
-        console.error(err);
+        showGlobalStatus("OCR ครบทุกไฟล์ที่เลือกแล้ว", "success");
       } finally {
-        loader.style.display = 'none';
-        updateSummary();
-        alert(`บันทึกเสร็จแล้ว\nสำเร็จ: ${ok} รายการ\nไม่สำเร็จ: ${fail} รายการ`);
+        setBusy(false);
+        renderAll();
       }
     }
 
-    async function saveReceiptInternal(receiptId, silentMode) {
-      const item = receiptStore[receiptId];
-      if (!item || item.deleted || item.saved) return false;
+    async function saveSelectedItem() {
+      const item = getSelectedItem();
+      if (!item) return;
+      await saveItem(item.id);
+    }
 
-      const btn = document.getElementById(`save-btn-${receiptId}`);
-      const badge = document.getElementById(`badge-${receiptId}`);
-      const card = document.getElementById(`card-${receiptId}`);
-
-      const validatedData = {
-        tax_invoice: value(`inv-${receiptId}`),
-        date: value(`date-${receiptId}`),
-        company: value(`comp-${receiptId}`),
-        fuel_type: value(`fuel-${receiptId}`),
-        total_amount: toNumber(value(`total-${receiptId}`)),
-        price_per_liter: toNumber(value(`ppl-${receiptId}`)),
-        liters: toNumber(value(`lit-${receiptId}`)),
-        car_plate: value(`plate-${receiptId}`),
-        mileage: value(`mile-${receiptId}`)
-      };
-
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...';
-      }
+    async function saveItem(itemId) {
+      const item = state.items.find(x => x.id === itemId);
+      if (!item) return;
 
       try {
-        const res = await callApi('save', {
-          validatedData,
+        setBusy(true);
+        syncFormToItem(item);
+        showItemStatus(`กำลังบันทึก: ${item.file.name}`, "info");
+
+        const result = await callBackendPost({
+          action: "save",
+          requestId: item.requestId,
+          validatedData: item.formData,
           fileData: item.fileData
         });
 
-        if (res && res.success) {
-          item.saved = true;
-          item.selected = false;
-
-          if (btn) {
-            btn.innerHTML = 'บันทึกแล้ว ✅';
-            btn.className = 'btn btn-secondary flex-grow-1';
-          }
-
-          if (badge) {
-            badge.className = 'badge bg-success px-3 py-2';
-            badge.innerText = 'บันทึกแล้ว';
-          }
-
-          if (card) {
-            card.classList.add('success-card');
-            card.classList.remove('selected');
-            card.querySelectorAll('input').forEach(el => {
-              if (el.type !== 'checkbox') el.disabled = true;
-            });
-          }
-
-          const cb = document.getElementById(`check-${receiptId}`);
-          if (cb) cb.checked = false;
-
-          updateSummary();
-          return true;
-        } else {
-          throw new Error(res?.error || 'บันทึกไม่สำเร็จ');
+        if (!result.success) {
+          throw new Error(result.error || "บันทึกข้อมูลไม่สำเร็จ");
         }
+
+        item.status = "saved";
+        item.error = "";
+        item.saveResult = result;
+
+        renderAll();
+        showItemStatus(
+          `บันทึกสำเร็จ: ${item.file.name}\nแถวที่บันทึก: ${result.row || "-"}`
+          + (result.requestId ? `\nrequestId: ${result.requestId}` : ""),
+          "success"
+        );
+
+        selectNextActionable();
       } catch (err) {
-        console.error('save error:', err);
-
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = 'ลองบันทึกอีกครั้ง';
-        }
-
-        if (!silentMode) {
-          alert('บันทึกไม่สำเร็จ: ' + (err.message || err));
-        }
-
-        updateSummary();
-        return false;
+        console.error(err);
+        item.status = "error";
+        item.error = err.message || String(err);
+        renderAll();
+        showItemStatus(`บันทึกล้มเหลว: ${item.file.name}\n${item.error}`, "error");
+      } finally {
+        setBusy(false);
       }
     }
 
-    /************************************************
-     * DELETE
-     ************************************************/
-    function removeReceipt(receiptId) {
-      const item = receiptStore[receiptId];
-      if (!item) return;
+    async function saveAllReadyItems() {
+      const targets = state.items.filter(item => item.status === "ready");
 
-      let msg = 'ต้องการลบรายการใบเสร็จนี้ออกจากหน้าจอใช่หรือไม่?';
-      if (item.saved) {
-        msg = 'รายการนี้ถูกบันทึกลง Google Sheets แล้ว\nการลบนี้จะลบออกจากหน้าจอเท่านั้น ไม่ได้ลบจากชีท\n\nต้องการดำเนินการต่อหรือไม่?';
-      }
-
-      if (!confirm(msg)) return;
-
-      item.deleted = true;
-      item.selected = false;
-
-      const card = document.getElementById(`card-${receiptId}`);
-      if (card) card.remove();
-
-      updateSummary();
-    }
-
-    function deleteSelectedReceipts() {
-      const selectedIds = getSelectedReceiptIds();
-
-      if (selectedIds.length === 0) {
-        alert('กรุณาเลือกอย่างน้อย 1 รายการ');
+      if (!targets.length) {
+        showGlobalStatus("ไม่มีไฟล์ที่พร้อมบันทึก", "warn");
         return;
       }
 
-      const hasSaved = selectedIds.some(id => receiptStore[id]?.saved);
-      let msg = `ต้องการลบรายการที่เลือก ${selectedIds.length} รายการใช่หรือไม่?`;
+      setBusy(true);
 
-      if (hasSaved) {
-        msg += '\n\nหมายเหตุ: รายการที่บันทึกแล้วจะถูกลบออกจากหน้าจอเท่านั้น ไม่ได้ลบจาก Google Sheet';
+      try {
+        for (let i = 0; i < targets.length; i++) {
+          const item = targets[i];
+          state.selectedId = item.id;
+          renderAll();
+          showGlobalStatus(`กำลังบันทึก (${i + 1}/${targets.length}) : ${item.file.name}`, "info");
+          await saveItem(item.id);
+        }
+        showGlobalStatus("บันทึกครบทุกไฟล์ที่พร้อมแล้ว", "success");
+      } finally {
+        setBusy(false);
+        renderAll();
+      }
+    }
+
+    async function callBackendPost(bodyObj) {
+      if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
+        throw new Error("กรุณาใส่ SCRIPT_URL ในโค้ดก่อนใช้งาน");
       }
 
-      if (!confirm(msg)) return;
-
-      selectedIds.forEach(id => {
-        const item = receiptStore[id];
-        if (!item) return;
-        item.deleted = true;
-        item.selected = false;
-
-        const card = document.getElementById(`card-${id}`);
-        if (card) card.remove();
+      const resp = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(bodyObj),
+        redirect: "follow"
       });
 
-      updateSummary();
-    }
+      const text = await resp.text();
 
-    /************************************************
-     * MODAL VIEWER (ZOOM + ROTATE)
-     ************************************************/
-    function openImageModal(receiptId) {
-      const item = receiptStore[receiptId];
-      if (!item || !item.fileData) return;
-
-      currentModalReceiptId = receiptId;
-      currentModalScale = 1;
-
-      const modalEl = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImage');
-      const modalFileName = document.getElementById('modalFileName');
-      const src = `data:${item.fileData.type || 'image/jpeg'};base64,${item.fileData.data}`;
-
-      modalImg.src = src;
-      modalFileName.textContent = item.fileData.name || '-';
-
-      applyModalTransform();
-
-      if (!imageModalInstance) {
-        imageModalInstance = new bootstrap.Modal(modalEl);
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (err) {
+        throw new Error("Backend ไม่ได้ส่ง JSON กลับมา: " + text);
       }
-      imageModalInstance.show();
+
+      return parsed;
     }
 
-    function rotateModalImage(delta) {
-      if (!currentModalReceiptId) return;
-      const item = receiptStore[currentModalReceiptId];
-      if (!item) return;
-
-      item.rotation = ((item.rotation || 0) + delta) % 360;
-      applyModalTransform();
+    function renderAll() {
+      renderCounts();
+      renderQueue();
+      renderPreview();
+      renderRawText();
+      renderEditor();
+      updateButtons();
     }
 
-    function zoomModalImage(delta) {
-      currentModalScale += delta;
-
-      if (currentModalScale < 0.4) currentModalScale = 0.4;
-      if (currentModalScale > 3) currentModalScale = 3;
-
-      applyModalTransform();
+    function renderCounts() {
+      els.countAll.textContent = state.items.length;
+      els.countReady.textContent = state.items.filter(x => x.status === "ready").length;
+      els.countSaved.textContent = state.items.filter(x => x.status === "saved").length;
+      els.countError.textContent = state.items.filter(x => x.status === "error").length;
     }
 
-    function resetModalView() {
-      if (!currentModalReceiptId) return;
-      const item = receiptStore[currentModalReceiptId];
-      if (!item) return;
+    function renderQueue() {
+      if (!state.items.length) {
+        els.queueList.innerHTML = `<div class="empty-note">ยังไม่มีไฟล์ในรายการ</div>`;
+        return;
+      }
 
-      item.rotation = 0;
-      currentModalScale = 1;
-      applyModalTransform();
-    }
+      els.queueList.innerHTML = state.items.map(item => {
+        const active = item.id === state.selectedId ? "active" : "";
+        const sizeMb = (item.file.size / (1024 * 1024)).toFixed(2);
 
-    function applyModalTransform() {
-      if (!currentModalReceiptId) return;
+        return `
+          <div class="queue-item ${active}" data-id="${item.id}">
+            <div class="queue-top">
+              <div>
+                <div class="queue-name">${escapeHtml(item.file.name)}</div>
+                <div class="queue-meta">
+                  ${escapeHtml(item.file.type || guessMimeTypeByName(item.file.name))}<br>
+                  ${sizeMb} MB
+                </div>
+              </div>
+              <span class="badge ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
+            </div>
 
-      const item = receiptStore[currentModalReceiptId];
-      const modalImg = document.getElementById('modalImage');
-      if (!item || !modalImg) return;
+            ${item.error ? `<div class="queue-meta" style="color:#b91c1c;">${escapeHtml(item.error)}</div>` : ""}
 
-      modalImg.style.transform = `rotate(${item.rotation || 0}deg) scale(${currentModalScale})`;
-    }
-
-    /************************************************
-     * SUMMARY
-     ************************************************/
-    function updateSummary() {
-      const activeIds = getActiveReceiptIds();
-      const selectedIds = getSelectedReceiptIds();
-      const savedCount = activeIds.filter(id => receiptStore[id].saved).length;
-      const pendingCount = activeIds.filter(id => !receiptStore[id].saved).length;
-
-      document.getElementById('countAll').innerText = activeIds.length;
-      document.getElementById('countSelected').innerText = selectedIds.length;
-      document.getElementById('countSaved').innerText = savedCount;
-      document.getElementById('countPending').innerText = pendingCount;
-
-      const summaryBar = document.getElementById('summaryBar');
-      const saveSelectedBtn = document.getElementById('saveSelectedBtn');
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-
-      const hasAny = activeIds.length > 0;
-      summaryBar.style.display = hasAny ? 'block' : 'none';
-
-      const selectedPendingCount = selectedIds.filter(id => !receiptStore[id].saved).length;
-      saveSelectedBtn.disabled = selectedPendingCount === 0;
-
-      const allSelected = activeIds.length > 0 && activeIds.every(id => receiptStore[id].selected);
-      selectAllCheckbox.checked = allSelected;
-
-      const previewArea = document.getElementById('previewArea');
-      if (!hasAny) {
-        previewArea.innerHTML = `
-          <div class="empty-state" id="emptyState">
-            <div style="font-size: 50px;">🧾</div>
-            <h5 class="fw-bold mt-3">ยังไม่มีใบเสร็จที่สแกน</h5>
-            <div>เลือกไฟล์ภาพแล้วกดปุ่ม “เริ่มสแกนใบเสร็จด้วย AI”</div>
+            <div class="queue-actions">
+              <button class="mini-btn select" data-action="select" data-id="${item.id}">เลือก</button>
+              <button class="mini-btn remove" data-action="remove" data-id="${item.id}">ลบ</button>
+            </div>
           </div>
         `;
-      }
-    }
+      }).join("");
 
-    function getActiveReceiptIds() {
-      return Object.keys(receiptStore).filter(id => {
-        const item = receiptStore[id];
-        return item && !item.deleted;
+      els.queueList.querySelectorAll('[data-action="select"]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          state.selectedId = btn.dataset.id;
+          clearItemStatus();
+          renderAll();
+        });
+      });
+
+      els.queueList.querySelectorAll('[data-action="remove"]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const item = state.items.find(x => x.id === btn.dataset.id);
+          if (!item) return;
+          if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+          state.items = state.items.filter(x => x.id !== item.id);
+          if (state.selectedId === item.id) {
+            state.selectedId = state.items[0]?.id || null;
+          }
+          renderAll();
+        });
+      });
+
+      els.queueList.querySelectorAll(".queue-item").forEach(card => {
+        card.addEventListener("click", () => {
+          state.selectedId = card.dataset.id;
+          clearItemStatus();
+          renderAll();
+        });
       });
     }
 
-    /************************************************
-     * HELPERS
-     ************************************************/
-    function openGoogleSheet() {
-      window.open(SHEET_URL, '_blank');
+    function renderPreview() {
+      const item = getSelectedItem();
+
+      if (!item) {
+        els.previewPlaceholder.classList.remove("hidden");
+        els.previewImageWrap.classList.add("hidden");
+        els.previewPdf.classList.add("hidden");
+        els.previewPlaceholder.textContent = "ยังไม่ได้เลือกไฟล์";
+        return;
+      }
+
+      const isImage = (item.file.type || "").startsWith("image/");
+      const isPdf = (item.file.type || "").includes("pdf") || item.file.name.toLowerCase().endsWith(".pdf");
+
+      if (isImage) {
+        els.previewImage.src = item.previewUrl;
+        applyImageTransform(item);
+        els.previewPlaceholder.classList.add("hidden");
+        els.previewImageWrap.classList.remove("hidden");
+        els.previewPdf.classList.add("hidden");
+      } else if (isPdf) {
+        els.previewPdfName.textContent = item.file.name;
+        els.previewPlaceholder.classList.add("hidden");
+        els.previewImageWrap.classList.add("hidden");
+        els.previewPdf.classList.remove("hidden");
+      } else {
+        els.previewPlaceholder.classList.remove("hidden");
+        els.previewPlaceholder.textContent = item.file.name;
+        els.previewImageWrap.classList.add("hidden");
+        els.previewPdf.classList.add("hidden");
+      }
     }
 
-    function createReceiptId(index) {
-      return `r_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 8)}`;
+    function renderRawText() {
+      const item = getSelectedItem();
+      els.ocrRawText.value = item ? (item.rawText || "") : "";
     }
 
-    function value(id) {
-      const el = document.getElementById(id);
-      return el ? el.value : '';
+    function renderEditor() {
+      const item = getSelectedItem();
+
+      if (!item) {
+        els.editorEmpty.classList.remove("hidden");
+        els.editorPanel.classList.add("hidden");
+        return;
+      }
+
+      els.editorEmpty.classList.add("hidden");
+      els.editorPanel.classList.remove("hidden");
+
+      fillEditor(item.formData);
+      updateSummary(item.formData);
     }
 
-    function toNumber(v) {
-      const n = Number(String(v || '').replace(/,/g, '').trim());
-      return isFinite(n) ? n : 0;
+    function fillEditor(data) {
+      els.fields.tax_invoice.value = data.tax_invoice ?? "-";
+      els.fields.tax_id.value = data.tax_id ?? "-";
+      els.fields.date.value = data.date ?? "-";
+      els.fields.company.value = data.company ?? "-";
+      els.fields.fuel_type.value = data.fuel_type ?? "-";
+      els.fields.price_per_liter.value = data.price_per_liter ?? 0;
+      els.fields.liters.value = data.liters ?? 0;
+      els.fields.total_amount.value = data.total_amount ?? 0;
+      els.fields.car_plate.value = data.car_plate ?? "-";
+      els.fields.mileage.value = data.mileage ?? "-";
+    }
+
+    function updateButtons() {
+      const selected = getSelectedItem();
+      const hasItems = state.items.length > 0;
+      const hasReady = state.items.some(x => x.status === "ready");
+      const canViewImage = selected && (selected.file.type || "").startsWith("image/");
+
+      els.btnOcrCurrent.disabled = state.busy || !selected;
+      els.btnOcrSelected.disabled = state.busy || !selected;
+      els.btnSaveSelected.disabled = state.busy || !selected;
+      els.btnRemoveSelected.disabled = state.busy || !selected;
+      els.btnOcrAll.disabled = state.busy || !hasItems;
+      els.btnSaveAllReady.disabled = state.busy || !hasReady;
+      els.btnClearAll.disabled = state.busy || !hasItems;
+
+      els.btnRotateLeft.disabled = state.busy || !canViewImage;
+      els.btnRotateRight.disabled = state.busy || !canViewImage;
+      els.btnZoomIn.disabled = state.busy || !canViewImage;
+      els.btnZoomOut.disabled = state.busy || !canViewImage;
+      els.btnResetView.disabled = state.busy || !canViewImage;
+
+      els.btnCopyOcrText.disabled = !selected || !(selected.rawText || "");
+    }
+
+    function adjustRotation(delta) {
+      const item = getSelectedItem();
+      if (!item) return;
+      item.view.rotation = (item.view.rotation + delta) % 360;
+      applyImageTransform(item);
+    }
+
+    function adjustScale(delta) {
+      const item = getSelectedItem();
+      if (!item) return;
+      const next = Math.max(0.2, Math.min(4, (item.view.scale || 1) + delta));
+      item.view.scale = round3(next);
+      applyImageTransform(item);
+    }
+
+    function resetViewTransform() {
+      const item = getSelectedItem();
+      if (!item) return;
+      item.view.rotation = 0;
+      item.view.scale = 1;
+      applyImageTransform(item);
+    }
+
+    function applyImageTransform(item) {
+      if (!item) return;
+      els.previewImage.style.transform = `rotate(${item.view.rotation || 0}deg) scale(${item.view.scale || 1})`;
+    }
+
+    function getSelectedItem() {
+      return state.items.find(x => x.id === state.selectedId) || null;
+    }
+
+    function setBusy(flag) {
+      state.busy = !!flag;
+      updateButtons();
+    }
+
+    function showGlobalStatus(message, type="info") {
+      els.globalStatus.className = `status-panel ${type}`;
+      els.globalStatus.textContent = message;
+    }
+
+    function clearGlobalStatus() {
+      els.globalStatus.className = "status-panel";
+      els.globalStatus.textContent = "";
+    }
+
+    function showItemStatus(message, type="info") {
+      els.itemStatus.className = `status-panel ${type}`;
+      els.itemStatus.textContent = message;
+    }
+
+    function clearItemStatus() {
+      els.itemStatus.className = "status-panel";
+      els.itemStatus.textContent = "";
+    }
+
+    function defaultFormData() {
+      return {
+        tax_invoice: "-",
+        tax_id: "-",
+        date: "-",
+        company: "-",
+        fuel_type: "-",
+        price_per_liter: 0,
+        liters: 0,
+        total_amount: 0,
+        car_plate: "-",
+        mileage: "-"
+      };
+    }
+
+    function normalizeFormData(data = {}) {
+      return {
+        tax_invoice: sanitizeText(data.tax_invoice),
+        tax_id: sanitizeText(data.tax_id),
+        date: sanitizeText(data.date),
+        company: sanitizeText(data.company),
+        fuel_type: sanitizeText(data.fuel_type),
+        price_per_liter: toNumberSafe(data.price_per_liter),
+        liters: toNumberSafe(data.liters),
+        total_amount: toNumberSafe(data.total_amount),
+        car_plate: sanitizeText(data.car_plate),
+        mileage: sanitizeText(data.mileage)
+      };
+    }
+
+    function syncFormToItem(item) {
+      item.formData = {
+        tax_invoice: sanitizeText(els.fields.tax_invoice.value),
+        tax_id: sanitizeText(els.fields.tax_id.value),
+        date: sanitizeText(els.fields.date.value),
+        company: sanitizeText(els.fields.company.value),
+        fuel_type: sanitizeText(els.fields.fuel_type.value),
+        price_per_liter: toNumberSafe(els.fields.price_per_liter.value),
+        liters: toNumberSafe(els.fields.liters.value),
+        total_amount: toNumberSafe(els.fields.total_amount.value),
+        car_plate: sanitizeText(els.fields.car_plate.value),
+        mileage: sanitizeText(els.fields.mileage.value)
+      };
+    }
+
+    function updateSummary(formData) {
+      const total = toNumberSafe(formData?.total_amount);
+      const net = round2(total / 1.07);
+      const vat = round2(total - net);
+      els.sumNet.textContent = formatNumber(net);
+      els.sumVat.textContent = formatNumber(vat);
+      els.sumTotal.textContent = formatNumber(total);
+    }
+
+    function selectNextActionable() {
+      const next = state.items.find(x => x.status === "ready" || x.status === "pending" || x.status === "error");
+      if (next) {
+        state.selectedId = next.id;
+        renderAll();
+      }
+    }
+
+    function statusLabel(status) {
+      switch (status) {
+        case "pending": return "รอ OCR";
+        case "processing": return "กำลังทำงาน";
+        case "ready": return "พร้อมบันทึก";
+        case "saved": return "บันทึกแล้ว";
+        case "error": return "ผิดพลาด";
+        default: return status;
+      }
+    }
+
+    function toNumberSafe(v) {
+      if (v === null || v === undefined || v === "") return 0;
+      const s = String(v).replace(/,/g, "").trim();
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function sanitizeText(v, fallback="-") {
+      const s = (v ?? "").toString().trim();
+      return s || fallback;
+    }
+
+    function round2(n) {
+      const x = Number(n || 0);
+      return Math.round((x + Number.EPSILON) * 100) / 100;
+    }
+
+    function round3(n) {
+      const x = Number(n || 0);
+      return Math.round((x + Number.EPSILON) * 1000) / 1000;
+    }
+
+    function formatNumber(n) {
+      return Number(n || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function randomId() {
+      return "id_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function guessMimeTypeByName(name) {
+      const n = String(name || "").toLowerCase();
+      if (n.endsWith(".png")) return "image/png";
+      if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";
+      if (n.endsWith(".webp")) return "image/webp";
+      if (n.endsWith(".heic")) return "image/heic";
+      if (n.endsWith(".pdf")) return "application/pdf";
+      return "application/octet-stream";
     }
 
     function escapeHtml(str) {
-      return String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    function inputField(id, receiptId, label, val, col = 'col-md-6') {
-      return `
-        <div class="${col}">
-          <label class="label-custom">${escapeHtml(label)}</label>
-          <input type="text" class="form-control form-control-sm" id="${id}-${receiptId}" value="${escapeHtml(val)}">
-        </div>
-      `;
-    }
-
-    function inputNumber(id, receiptId, label, val, step, highlight = false) {
-      return `
-        <div class="col-md-6">
-          <label class="label-custom">${escapeHtml(label)}</label>
-          <input type="number"
-                 step="${step}"
-                 class="form-control form-control-sm ${highlight ? 'border-primary fw-bold' : ''}"
-                 id="${id}-${receiptId}"
-                 value="${escapeHtml(val)}">
-        </div>
-      `;
-    }
-
-    /************************************************
-     * IMAGE RESIZE
-     ************************************************/
-    function resizeImage(file) {
+    function fileToBase64(file) {
       return new Promise((resolve, reject) => {
-        try {
-          if (!file) {
-            reject(new Error('ไม่พบไฟล์'));
-            return;
-          }
-
-          const unsupportedTypes = ['image/heic', 'image/heif'];
-          if (unsupportedTypes.includes(file.type)) {
-            reject(new Error(`ไฟล์ชนิด ${file.type} ยังไม่รองรับใน browser นี้ กรุณาแปลงเป็น JPG หรือ PNG ก่อน`));
-            return;
-          }
-
-          const reader = new FileReader();
-
-          reader.onerror = () => {
-            reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
-          };
-
-          reader.onload = (event) => {
-            const img = new Image();
-
-            img.onerror = () => {
-              reject(new Error('โหลดรูปไม่สำเร็จ อาจเป็นไฟล์ภาพที่ browser ไม่รองรับ'));
-            };
-
-            img.onload = () => {
-              try {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1600;
-                const MAX_HEIGHT = 1600;
-
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                  if (width > MAX_WIDTH) {
-                    height = Math.round(height * (MAX_WIDTH / width));
-                    width = MAX_WIDTH;
-                  }
-                } else {
-                  if (height > MAX_HEIGHT) {
-                    width = Math.round(width * (MAX_HEIGHT / height));
-                    height = MAX_HEIGHT;
-                  }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                const base64 = canvas.toDataURL('image/jpeg', 0.9);
-
-                resolve({
-                  name: file.name.replace(/\.[^.]+$/, '') + '.jpg',
-                  type: 'image/jpeg',
-                  data: base64.split(',')[1]
-                });
-              } catch (err) {
-                reject(new Error('แปลงรูปไม่สำเร็จ: ' + err.message));
-              }
-            };
-
-            img.src = event.target.result;
-          };
-
-          reader.readAsDataURL(file);
-        } catch (err) {
-          reject(err);
-        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result || "";
+          const base64 = String(result).split(",")[1] || "";
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
     }
-
-    /************************************************
-     * INIT
-     ************************************************/
-    document.addEventListener('DOMContentLoaded', () => {
-      initTheme();
-    });
   </script>
 </body>
 </html>
