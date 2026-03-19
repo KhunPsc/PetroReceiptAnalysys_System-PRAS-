@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> ระบบตรวจสอบและบันทึกข้อมูลใบเสร็จการเติมน้ำมันเชื้อเพลิง</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f3f5f9;
+      font-family: 'Sarabun', sans-serif;
+      padding: 20px;
+      color: #1f2937;
+    }
+
+    .main-header {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.07);
+      padding: 30px;
+      margin-bottom: 20px;
+      border-top: 6px solid #0d6efd;
+    }
+
+    .summary-bar {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+      padding: 18px;
+      margin-bottom: 20px;
+      display: none;
+      position: sticky;
+      top: 10px;
+      z-index: 100;
+    }
+
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8f9fa;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      border-top: 1px solid #eceff3;
+      padding-top: 14px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .receipt-card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+      overflow: hidden;
+      border: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .receipt-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.1);
+    }
+
+    .receipt-card.selected {
+      outline: 3px solid rgba(13,110,253,0.12);
+      border-left: 6px solid #0d6efd;
+    }
+
+    .success-card {
+      opacity: 0.95;
+      border-left: 6px solid #198754 !important;
+    }
+
+    .img-container {
+      background: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 340px;
+      cursor: zoom-in;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .img-container::after {
+      content: "คลิกเพื่อดูรูปเต็ม";
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .img-container img {
+      max-width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+    }
+
+    .form-section {
+      padding: 24px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .card-top-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .select-box {
+      transform: scale(1.2);
+      margin-top: 6px;
+      cursor: pointer;
+    }
+
+    .file-name {
+      font-size: 12px;
+      color: #6c757d;
+      word-break: break-all;
+    }
+
+    .label-custom {
+      font-size: 0.82rem;
+      color: #666;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .form-control-sm {
+      border-radius: 10px;
+      border: 1px solid #dadde3;
+      padding: 9px 12px;
+    }
+
+    .form-control-sm:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.15);
+    }
+
+    .btn {
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.92);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      backdrop-filter: blur(2px);
+    }
+
+    .empty-state {
+      background: #fff;
+      border-radius: 18px;
+      padding: 50px 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+      text-align: center;
+      color: #6c757d;
+    }
+
+    .modal-img-wrap {
+      background: #0f172a;
+      border-radius: 16px;
+      overflow: auto;
+      text-align: center;
+      padding: 12px;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img-wrap img {
+      max-width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+      transform-origin: center center;
+    }
+
+    .viewer-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+      .main-header { padding: 22px; }
+      .form-section { padding: 18px; }
+      .img-container { min-height: 250px; }
+      .toolbar-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .toolbar-left, .toolbar-right {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader" class="loading-overlay">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;"></div>
+    <div class="mt-3 fw-bold text-primary" id="loaderText">กำลังประมวลผล...</div>
+    <div class="text-muted small mt-1">กรุณารอสักครู่ AI กำลังอ่านข้อมูลใบเสร็จ</div>
+  </div>
+
+  <div class="container" style="max-width: 1140px;">
+    <!-- Header -->
+    <div class="main-header text-center">
+      <h2 class="fw-bold mb-2">⛽ ระบบตรวจสอบและบันทึกข้อมูลใบเสร็จการเติมน้ำมันเชื้อเพลิง</h2>
+      <p class="text-muted mb-3">
+        Frontend บน GitHub Pages + Backend บน Google Apps Script
+      </p>
+
+      <div class="row justify-content-center mt-4">
+        <div class="col-lg-8">
+          <input type="file" id="files" class="form-control form-control-lg mb-3" multiple accept="image/*">
+          <div class="d-flex justify-content-center flex-wrap gap-2">
+            <button class="btn btn-primary btn-lg shadow-sm fw-bold" onclick="processImages()">
+              Upload รูปภาพใบเสร็จ
+            </button>
+
+            <button class="btn btn-outline-secondary btn-lg shadow-sm fw-bold" onclick="openGoogleSheet()">
+              📄 เปิด Sheet
+            </button>
+
+            <button class="btn btn-outline-dark btn-lg shadow-sm fw-bold" onclick="pingBackend()">
+              ทดสอบ API
+            </button>
+          </div>
+
+          <div class="small-note mt-3">
+            หลังสแกนแล้ว ให้เลือกใบเสร็จที่ต้องการบันทึกจาก checkbox ของแต่ละรายการ
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Toolbar -->
+    <div id="summaryBar" class="summary-bar">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <span class="summary-pill">📄 รายการทั้งหมด: <span id="countAll">0</span></span>
+          <span class="summary-pill">✅ เลือกอยู่: <span id="countSelected">0</span></span>
+          <span class="summary-pill">💾 บันทึกแล้ว: <span id="countSaved">0</span></span>
+          <span class="summary-pill">⏳ รอการบันทึก: <span id="countPending">0</span></span>
+        </div>
+      </div>
+
+      <div class="toolbar-actions">
+        <div class="toolbar-left">
+          <div class="form-check me-2">
+            <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+            <label class="form-check-label fw-semibold" for="selectAllCheckbox">เลือกทั้งหมด</label>
+          </div>
+
+          <button class="btn btn-outline-secondary btn-sm" onclick="clearAllSelections()">
+            ยกเลิกการเลือกทั้งหมด
+          </button>
+
+          <button class="btn btn-success btn-sm" id="saveSelectedBtn" onclick="saveSelectedReceipts()" disabled>
+            บันทึกใบเสร็จที่เลือก
+          </button>
+        </div>
+
+        <div class="toolbar-right">
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedReceipts()">
+            ลบรายการที่เลือก
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="previewArea">
+      <div class="empty-state" id="emptyState">
+        <div style="font-size: 50px;">🧾</div>
+        <h5 class="fw-bold mt-3">ยังไม่มีใบเสร็จที่สแกน</h5>
+        <div>เลือกไฟล์ภาพแล้วกดปุ่ม “เริ่มสแกนใบเสร็จด้วย AI”</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg" style="border-radius:18px;">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">🔍 ดูรูปใบเสร็จ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="modal-img-wrap">
+            <img id="modalImage" src="" alt="Receipt Preview">
+          </div>
+
+          <div class="viewer-toolbar">
+            <button class="btn btn-outline-secondary" onclick="rotateModalImage(-90)">↺ หมุนซ้าย</button>
+            <button class="btn btn-outline-secondary" onclick="rotateModalImage(90)">↻ หมุนขวา</button>
+
+            <button class="btn btn-outline-primary" onclick="zoomModalImage(0.2)">＋ Zoom</button>
+            <button class="btn btn-outline-primary" onclick="zoomModalImage(-0.2)">－ Zoom</button>
+
+            <button class="btn btn-outline-dark" onclick="resetModalView()">รีเซ็ต</button>
+          </div>
+
+          <div class="mt-3 text-muted small text-center" id="modalFileName"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /************************************************
+     * CONFIG - EDIT THESE 2 VALUES BEFORE USE
+     ************************************************/
+    const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEBAPP_EXEC_URL_HERE';
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fPeOMKqiohAi9chEy5PBkvTiZ5ulvHaimpZ9U1g0_70/edit';
+
+    /************************************************
+     * STATE
+     ************************************************/
+    const receiptStore = {};
+    let imageModalInstance = null;
+    let currentModalReceiptId = null;
+    let currentModalScale = 1;
+
+    /************************************************
+     * API
+     ************************************************/
+    async function callApi(action, payload = {}) {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        redirect: 'follow',
+        body: JSON.stringify({
+          action,
+          ...payload
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    async function pingBackend() {
+      try {
+        const res = await callApi('ping');
+        alert('API ใช้งานได้: ' + JSON.stringify(res, null, 2));
+      } catch (err) {
+        alert('เรียก API ไม่สำเร็จ: ' + (err.message || err));
+      }
+    }
+
+    /************************************************
+     * MAIN FLOW
+     ************************************************/
+    async function processImages() {
+      const fileInput = document.getElementById('files');
+      const previewArea = document.getElementById('previewArea');
+      const loader = document.getElementById('loader');
+      const loaderText = document.getElementById('loaderText');
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('กรุณาเลือกไฟล์รูปภาพก่อนครับ');
+        return;
+      }
+
+      previewArea.innerHTML = '';
+      Object.keys(receiptStore).forEach(k => delete receiptStore[k]);
+
+      loader.style.display = 'flex';
+
+      try {
+        for (let i = 0; i < fileInput.files.length; i++) {
+          const file = fileInput.files[i];
+          const receiptId = createReceiptId(i);
+
+          loaderText.innerText = `กำลังอ่านรูปที่ ${i + 1} จาก ${fileInput.files.length}...`;
+
+          const resizedFileData = await resizeImage(file);
+
+          receiptStore[receiptId] = {
+            fileData: resizedFileData,
+            saved: false,
+            deleted: false,
+            selected: false,
+            rotation: 0
+          };
+
+          loaderText.innerText = `กำลังวิเคราะห์ใบเสร็จรูปที่ ${i + 1}...`;
+
+          const result = await callApi('ocr', {
+            payload: resizedFileData
+          });
+
+          if (result && result.success) {
+            addReceiptCard(receiptId, result.data);
+          } else {
+            addErrorCard(receiptId, file.name, result?.error || 'ไม่ทราบสาเหตุ');
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาด: ' + (err.message || err));
+      } finally {
+        loader.style.display = 'none';
+        updateSummary();
+      }
+    }
+
+    /************************************************
+     * RENDER CARD
+     ************************************************/
+    function addReceiptCard(receiptId, data) {
+      const previewArea = document.getElementById('previewArea');
+      const fileData = receiptStore[receiptId].fileData;
+      const imgSrc = `data:${fileData.type || 'image/jpeg'};base64,${fileData.data}`;
+
+      const safe = {
+        tax_invoice: data?.tax_invoice || '-',
+        date: data?.date || '-',
+        company: data?.company || '-',
+        fuel_type: data?.fuel_type || '-',
+        total_amount: data?.total_amount ?? 0,
+        price_per_liter: data?.price_per_liter ?? 0,
+        liters: data?.liters ?? 0,
+        car_plate: data?.car_plate || '-',
+        mileage: data?.mileage || '-'
+      };
+
+      const html = `
+        <div class="receipt-card card" id="card-${receiptId}">
+          <div class="row g-0">
+            <div class="col-lg-5 img-container" onclick="openImageModal('${receiptId}')">
+              <img src="${imgSrc}" alt="Receipt Image">
+            </div>
+
+            <div class="col-lg-7 form-section">
+              <div class="card-top">
+                <div class="card-top-left">
+                  <input class="form-check-input select-box"
+                         type="checkbox"
+                         id="check-${receiptId}"
+                         onchange="toggleReceiptSelection('${receiptId}', this.checked)">
+
+                  <div>
+                    <h5 class="fw-bold text-primary mb-1">📝 ตรวจสอบข้อมูลใบเสร็จ</h5>
+                    <div class="file-name">${escapeHtml(fileData.name || '-')}</div>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                  <span class="badge bg-warning text-dark px-3 py-2" id="badge-${receiptId}">รอการยืนยัน</span>
+                  <button class="btn btn-outline-danger btn-sm" onclick="removeReceipt('${receiptId}')">ลบ</button>
+                </div>
+              </div>
+
+              <div class="row g-3">
+                ${inputField('inv', receiptId, 'เลขที่ใบกำกับภาษี', safe.tax_invoice)}
+                ${inputField('date', receiptId, 'วันที่ใบเสร็จ (วว/ดด/ปป)', safe.date)}
+                ${inputField('comp', receiptId, 'ชื่อบริษัท/สถานีบริการ', safe.company, 'col-12')}
+                ${inputField('fuel', receiptId, 'ประเภทน้ำมัน', safe.fuel_type)}
+                ${inputNumber('total', receiptId, 'ยอดรวมสุทธิ (รวม VAT)', safe.total_amount, '0.01', true)}
+                ${inputNumber('ppl', receiptId, 'ราคา/ลิตร', safe.price_per_liter, '0.001')}
+                ${inputNumber('lit', receiptId, 'จำนวนลิตร', safe.liters, '0.001')}
+                ${inputField('plate', receiptId, 'ทะเบียนรถ', safe.car_plate)}
+                ${inputField('mile', receiptId, 'เลขระยะทาง (KM)', safe.mileage, 'col-12')}
+              </div>
+
+              <div class="mt-4 d-flex gap-2 flex-wrap">
+                <button class="btn btn-success flex-grow-1"
+                        id="save-btn-${receiptId}"
+                        onclick="saveOneReceipt('${receiptId}')">
+                  บันทึกลง Sheet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      previewArea.insertAdjacentHTML('beforeend', html);
+      updateSummary();
+    }
+
+    function addErrorCard(receiptId, fileName, errorMsg) {
+      const previewArea = document.getElementById('previewArea');
+      const fileData = receiptStore[receiptId]?.fileData;
+      const imgSrc = fileData ? `data:${fileData.type || 'image/jpeg'};base64,${fileData.data}` : '';
+
+      const html = `
+        <div class="receipt-card card border-danger" id="card-${receiptId}">
+          <div class="row g-0">
+            <div class="col-lg-5 img-container" ${fileData ? `onclick="openImageModal('${receiptId}')"` : ''}>
+              ${imgSrc ? `<img src="${imgSrc}" alt="Receipt Image">` : `<div class="text-white">ไม่สามารถแสดงภาพได้</div>`}
+            </div>
+
+            <div class="col-lg-7 form-section">
+              <div class="card-top">
+                <div class="card-top-left">
+                  <input class="form-check-input select-box"
+                         type="checkbox"
+                         id="check-${receiptId}"
+                         onchange="toggleReceiptSelection('${receiptId}', this.checked)">
+                  <div>
+                    <h5 class="fw-bold text-danger mb-1">❌ อ่านข้อมูลไม่สำเร็จ</h5>
+                    <div class="file-name">${escapeHtml(fileName || '-')}</div>
+                  </div>
+                </div>
+
+                <button class="btn btn-outline-danger btn-sm" onclick="removeReceipt('${receiptId}')">ลบ</button>
+              </div>
+
+              <div class="alert alert-danger mb-0">${escapeHtml(errorMsg || 'ไม่ทราบสาเหตุ')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      previewArea.insertAdjacentHTML('beforeend', html);
+      updateSummary();
+    }
+
+    /************************************************
+     * SELECTION
+     ************************************************/
+    function toggleReceiptSelection(receiptId, checked) {
+      const item = receiptStore[receiptId];
+      if (!item || item.deleted) return;
+
+      item.selected = checked;
+      const card = document.getElementById(`card-${receiptId}`);
+      if (card) {
+        card.classList.toggle('selected', checked);
+      }
+
+      updateSummary();
+    }
+
+    function toggleSelectAll(checked) {
+      const ids = getActiveReceiptIds();
+
+      ids.forEach(id => {
+        const item = receiptStore[id];
+        if (!item || item.deleted) return;
+
+        item.selected = checked;
+
+        const cb = document.getElementById(`check-${id}`);
+        if (cb) cb.checked = checked;
+
+        const card = document.getElementById(`card-${id}`);
+        if (card) card.classList.toggle('selected', checked);
+      });
+
+      updateSummary();
+    }
+
+    function clearAllSelections() {
+      toggleSelectAll(false);
+    }
+
+    function getSelectedReceiptIds() {
+      return Object.keys(receiptStore).filter(id => {
+        const item = receiptStore[id];
+        return item && !item.deleted && item.selected;
+      });
+    }
+
+    /************************************************
+     * SAVE
+     ************************************************/
+    function saveOneReceipt(receiptId) {
+      saveReceiptInternal(receiptId, false);
+    }
+
+    async function saveSelectedReceipts() {
+      const selectedIds = getSelectedReceiptIds().filter(id => !receiptStore[id].saved);
+
+      if (selectedIds.length === 0) {
+        alert('กรุณาเลือกใบเสร็จที่ยังไม่บันทึกอย่างน้อย 1 รายการ');
+        return;
+      }
+
+      const loader = document.getElementById('loader');
+      const loaderText = document.getElementById('loaderText');
+      loader.style.display = 'flex';
+
+      let ok = 0;
+      let fail = 0;
+
+      try {
+        for (let i = 0; i < selectedIds.length; i++) {
+          loaderText.innerText = `กำลังบันทึก ${i + 1} / ${selectedIds.length}...`;
+          const success = await saveReceiptInternal(selectedIds[i], true);
+          if (success) ok++;
+          else fail++;
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        loader.style.display = 'none';
+        updateSummary();
+        alert(`บันทึกเสร็จแล้ว\nสำเร็จ: ${ok} รายการ\nไม่สำเร็จ: ${fail} รายการ`);
+      }
+    }
+
+    async function saveReceiptInternal(receiptId, silentMode) {
+      const item = receiptStore[receiptId];
+      if (!item || item.deleted || item.saved) return false;
+
+      const btn = document.getElementById(`save-btn-${receiptId}`);
+      const badge = document.getElementById(`badge-${receiptId}`);
+      const card = document.getElementById(`card-${receiptId}`);
+
+      const validatedData = {
+        tax_invoice: value(`inv-${receiptId}`),
+        date: value(`date-${receiptId}`),
+        company: value(`comp-${receiptId}`),
+        fuel_type: value(`fuel-${receiptId}`),
+        total_amount: toNumber(value(`total-${receiptId}`)),
+        price_per_liter: toNumber(value(`ppl-${receiptId}`)),
+        liters: toNumber(value(`lit-${receiptId}`)),
+        car_plate: value(`plate-${receiptId}`),
+        mileage: value(`mile-${receiptId}`)
+      };
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...';
+      }
+
+      try {
+        const res = await callApi('save', {
+          validatedData,
+          fileData: item.fileData
+        });
+
+        if (res && res.success) {
+          item.saved = true;
+          item.selected = false;
+
+          if (btn) {
+            btn.innerHTML = 'บันทึกแล้ว ✅';
+            btn.className = 'btn btn-secondary flex-grow-1';
+          }
+
+          if (badge) {
+            badge.className = 'badge bg-success px-3 py-2';
+            badge.innerText = 'บันทึกแล้ว';
+          }
+
+          if (card) {
+            card.classList.add('success-card');
+            card.classList.remove('selected');
+            card.querySelectorAll('input').forEach(el => {
+              if (el.type !== 'checkbox') el.disabled = true;
+            });
+          }
+
+          const cb = document.getElementById(`check-${receiptId}`);
+          if (cb) cb.checked = false;
+
+          updateSummary();
+          return true;
+        } else {
+          throw new Error(res?.error || 'บันทึกไม่สำเร็จ');
+        }
+      } catch (err) {
+        console.error('save error:', err);
+
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'ลองบันทึกอีกครั้ง';
+        }
+
+        if (!silentMode) {
+          alert('บันทึกไม่สำเร็จ: ' + (err.message || err));
+        }
+
+        updateSummary();
+        return false;
+      }
+    }
+
+    /************************************************
+     * DELETE
+     ************************************************/
+    function removeReceipt(receiptId) {
+      const item = receiptStore[receiptId];
+      if (!item) return;
+
+      let msg = 'ต้องการลบรายการใบเสร็จนี้ออกจากหน้าจอใช่หรือไม่?';
+      if (item.saved) {
+        msg = 'รายการนี้ถูกบันทึกลง Google Sheets แล้ว\nการลบนี้จะลบออกจากหน้าจอเท่านั้น ไม่ได้ลบจากชีท\n\nต้องการดำเนินการต่อหรือไม่?';
+      }
+
+      if (!confirm(msg)) return;
+
+      item.deleted = true;
+      item.selected = false;
+
+      const card = document.getElementById(`card-${receiptId}`);
+      if (card) card.remove();
+
+      updateSummary();
+    }
+
+    function deleteSelectedReceipts() {
+      const selectedIds = getSelectedReceiptIds();
+
+      if (selectedIds.length === 0) {
+        alert('กรุณาเลือกอย่างน้อย 1 รายการ');
+        return;
+      }
+
+      const hasSaved = selectedIds.some(id => receiptStore[id]?.saved);
+      let msg = `ต้องการลบรายการที่เลือก ${selectedIds.length} รายการใช่หรือไม่?`;
+
+      if (hasSaved) {
+        msg += '\n\nหมายเหตุ: รายการที่บันทึกแล้วจะถูกลบออกจากหน้าจอเท่านั้น ไม่ได้ลบจาก Google Sheet';
+      }
+
+      if (!confirm(msg)) return;
+
+      selectedIds.forEach(id => {
+        const item = receiptStore[id];
+        if (!item) return;
+        item.deleted = true;
+        item.selected = false;
+
+        const card = document.getElementById(`card-${id}`);
+        if (card) card.remove();
+      });
+
+      updateSummary();
+    }
+
+    /************************************************
+     * MODAL VIEWER (ZOOM + ROTATE)
+     ************************************************/
+    function openImageModal(receiptId) {
+      const item = receiptStore[receiptId];
+      if (!item || !item.fileData) return;
+
+      currentModalReceiptId = receiptId;
+      currentModalScale = 1;
+
+      const modalEl = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      const modalFileName = document.getElementById('modalFileName');
+      const src = `data:${item.fileData.type || 'image/jpeg'};base64,${item.fileData.data}`;
+
+      modalImg.src = src;
+      modalFileName.textContent = item.fileData.name || '-';
+
+      applyModalTransform();
+
+      if (!imageModalInstance) {
+        imageModalInstance = new bootstrap.Modal(modalEl);
+      }
+      imageModalInstance.show();
+    }
+
+    function rotateModalImage(delta) {
+      if (!currentModalReceiptId) return;
+      const item = receiptStore[currentModalReceiptId];
+      if (!item) return;
+
+      item.rotation = ((item.rotation || 0) + delta) % 360;
+      applyModalTransform();
+    }
+
+    function zoomModalImage(delta) {
+      currentModalScale += delta;
+
+      if (currentModalScale < 0.4) currentModalScale = 0.4;
+      if (currentModalScale > 3) currentModalScale = 3;
+
+      applyModalTransform();
+    }
+
+    function resetModalView() {
+      if (!currentModalReceiptId) return;
+      const item = receiptStore[currentModalReceiptId];
+      if (!item) return;
+
+      item.rotation = 0;
+      currentModalScale = 1;
+      applyModalTransform();
+    }
+
+    function applyModalTransform() {
+      if (!currentModalReceiptId) return;
+
+      const item = receiptStore[currentModalReceiptId];
+      const modalImg = document.getElementById('modalImage');
+      if (!item || !modalImg) return;
+
+      modalImg.style.transform = `rotate(${item.rotation || 0}deg) scale(${currentModalScale})`;
+    }
+
+    /************************************************
+     * SUMMARY
+     ************************************************/
+    function updateSummary() {
+      const activeIds = getActiveReceiptIds();
+      const selectedIds = getSelectedReceiptIds();
+      const savedCount = activeIds.filter(id => receiptStore[id].saved).length;
+      const pendingCount = activeIds.filter(id => !receiptStore[id].saved).length;
+
+      document.getElementById('countAll').innerText = activeIds.length;
+      document.getElementById('countSelected').innerText = selectedIds.length;
+      document.getElementById('countSaved').innerText = savedCount;
+      document.getElementById('countPending').innerText = pendingCount;
+
+      const summaryBar = document.getElementById('summaryBar');
+      const saveSelectedBtn = document.getElementById('saveSelectedBtn');
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+      const hasAny = activeIds.length > 0;
+      summaryBar.style.display = hasAny ? 'block' : 'none';
+
+      const selectedPendingCount = selectedIds.filter(id => !receiptStore[id].saved).length;
+      saveSelectedBtn.disabled = selectedPendingCount === 0;
+
+      const allSelected = activeIds.length > 0 && activeIds.every(id => receiptStore[id].selected);
+      selectAllCheckbox.checked = allSelected;
+
+      const previewArea = document.getElementById('previewArea');
+      if (!hasAny) {
+        previewArea.innerHTML = `
+          <div class="empty-state" id="emptyState">
+            <div style="font-size: 50px;">🧾</div>
+            <h5 class="fw-bold mt-3">ยังไม่มีใบเสร็จที่สแกน</h5>
+            <div>เลือกไฟล์ภาพแล้วกดปุ่ม “เริ่มสแกนใบเสร็จด้วย AI”</div>
+          </div>
+        `;
+      }
+    }
+
+    function getActiveReceiptIds() {
+      return Object.keys(receiptStore).filter(id => {
+        const item = receiptStore[id];
+        return item && !item.deleted;
+      });
+    }
+
+    /************************************************
+     * HELPERS
+     ************************************************/
+    function openGoogleSheet() {
+      window.open(SHEET_URL, '_blank');
+    }
+
+    function createReceiptId(index) {
+      return `r_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function value(id) {
+      const el = document.getElementById(id);
+      return el ? el.value : '';
+    }
+
+    function toNumber(v) {
+      const n = Number(String(v || '').replace(/,/g, '').trim());
+      return isFinite(n) ? n : 0;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function inputField(id, receiptId, label, val, col = 'col-md-6') {
+      return `
+        <div class="${col}">
+          <label class="label-custom">${escapeHtml(label)}</label>
+          <input type="text" class="form-control form-control-sm" id="${id}-${receiptId}" value="${escapeHtml(val)}">
+        </div>
+      `;
+    }
+
+    function inputNumber(id, receiptId, label, val, step, highlight = false) {
+      return `
+        <div class="col-md-6">
+          <label class="label-custom">${escapeHtml(label)}</label>
+          <input type="number"
+                 step="${step}"
+                 class="form-control form-control-sm ${highlight ? 'border-primary fw-bold' : ''}"
+                 id="${id}-${receiptId}"
+                 value="${escapeHtml(val)}">
+        </div>
+      `;
+    }
+
+    /************************************************
+     * IMAGE RESIZE
+     ************************************************/
+    function resizeImage(file) {
+      return new Promise((resolve, reject) => {
+        try {
+          if (!file) {
+            reject(new Error('ไม่พบไฟล์'));
+            return;
+          }
+
+          const unsupportedTypes = ['image/heic', 'image/heif'];
+          if (unsupportedTypes.includes(file.type)) {
+            reject(new Error(`ไฟล์ชนิด ${file.type} ยังไม่รองรับใน browser นี้ กรุณาแปลงเป็น JPG หรือ PNG ก่อน`));
+            return;
+          }
+
+          const reader = new FileReader();
+
+          reader.onerror = () => {
+            reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+          };
+
+          reader.onload = (event) => {
+            const img = new Image();
+
+            img.onerror = () => {
+              reject(new Error('โหลดรูปไม่สำเร็จ อาจเป็นไฟล์ภาพที่ browser ไม่รองรับ'));
+            };
+
+            img.onload = () => {
+              try {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1600;
+                const MAX_HEIGHT = 1600;
+
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                  if (width > MAX_WIDTH) {
+                    height = Math.round(height * (MAX_WIDTH / width));
+                    width = MAX_WIDTH;
+                  }
+                } else {
+                  if (height > MAX_HEIGHT) {
+                    width = Math.round(width * (MAX_HEIGHT / height));
+                    height = MAX_HEIGHT;
+                  }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const base64 = canvas.toDataURL('image/jpeg', 0.9);
+
+                resolve({
+                  name: file.name.replace(/\.[^.]+$/, '') + '.jpg',
+                  type: 'image/jpeg',
+                  data: base64.split(',')[1]
+                });
+              } catch (err) {
+                reject(new Error('แปลงรูปไม่สำเร็จ: ' + err.message));
+              }
+            };
+
+            img.src = event.target.result;
+          };
+
+          reader.readAsDataURL(file);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
