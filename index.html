@@ -497,7 +497,6 @@
     }
 
     .card-body{padding:18px}
-
     .hidden{display:none !important}
 
     .upload-panel{
@@ -681,11 +680,7 @@
     body.theme-dark .badge.saved{background:rgba(34,197,94,.16);color:#bbf7d0}
     body.theme-dark .badge.error{background:rgba(239,68,68,.16);color:#fecaca}
 
-    .queue-actions{
-      display:flex;
-      gap:8px;
-      margin-top:10px;
-    }
+    .queue-actions{display:flex;gap:8px;margin-top:10px}
 
     .mini-btn{
       border:none;
@@ -751,7 +746,6 @@
 
     .pdf-box{text-align:center;padding:28px}
     .pdf-box .icon{font-size:64px;margin-bottom:12px}
-
     .section-gap{margin-top:16px}
 
     .status-panel{
@@ -889,7 +883,6 @@
         margin-left:0;
         justify-content:space-between;
       }
-
       .brand-left{
         width:100%;
       }
@@ -1091,12 +1084,12 @@
             <div class="form-grid">
               <div class="field">
                 <label for="tax_invoice">เลขที่ใบกำกับภาษี</label>
-                <input id="tax_invoice" type="text" />
+                <input id="tax_invoice" type="text" inputmode="text" />
               </div>
 
               <div class="field">
                 <label for="tax_id">TAX ID</label>
-                <input id="tax_id" type="text" placeholder="เลขผู้เสียภาษี 13 หลัก" />
+                <input id="tax_id" type="text" inputmode="numeric" maxlength="13" placeholder="เลขผู้เสียภาษี 13 หลัก" />
               </div>
 
               <div class="field">
@@ -1165,8 +1158,31 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwX65vzZPSE-l4eq1aflCKpPT3N68Zfk93qjij6XmoxAxyO4RHJyQd6jqa4VDR3Jts/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGKlYWdsd17CWYXKib6325i5xvyvW1bP1_DwKO2xl8KUbmH8uJUnR49Ie1IG6F9E2k/exec";
     const THEME_KEY = "petroleum_receipt_theme";
+
+    const KNOWN_COMPANY_BY_TAX_ID = {
+      "0505554004101": "บ. แฝดสาม ศรีจอมทอง จำกัด",
+      "0505519000030": "บ.สุขุม เซอร์วิซ จำกัด",
+      "0505556006879": "บ. มิตรเกื้อกูล ปิโตเลี่ยม จำกัด",
+      "0505538000929": "บ. เพิ่มพูล ปิโตเลี่ยม จำกัด",
+      "0503532000151": "หจก.เจริญสุข เซอร์วิซ",
+      "0505532001079": "บ. เทพไชยา จำกัด",
+      "0505563012056": "บ.นพรัตน์ ปิโตเลี่ยม เชียงใหม่ จำกัด",
+      "0505540000400": "บ.อินทนนท์ ธนโชติ จำกัด",
+      "0503525000222": "หจก.พนาพนธ์เชียงใหม่",
+      "0625551000057": "บริษัท ธรรมรัตน์ ปิโตรเลียม จำกัด",
+      "0623539000849": "หจก.โค้งวิไลไทยเสรี",
+      "0623556001211": "หจก. สลกบาตร 2556",
+      "0105537121254": "บริษัท ปตท.บริหารธุรกิจค้าปลีก จำกัด",
+      "0105555115341": "บริษัท ส.รุ่งวิภา จำกัด",
+      "0515553000471": "บริษัท ลำพูน ปิโตรเลียม จำกัด",
+      "0663538000209": "ปตท.นพพรออยล์",
+      "0655557000245": "บริษัท พี เอ เอ็ม เอนเนอร์จี จำกัด",
+      "0673556000908": "ห้างหุ้นส่วนจำกัด มิตรศิลป์บริการ",
+      "0573529000243": "ห้างหุ้นส่วนจำกัด แม่สรวยปิโตรเลียม",
+      "0525555000613": "บริษัท ภัตรานครเขลางค์ จำกัด"
+    };
 
     const state = {
       items: [],
@@ -1285,9 +1301,26 @@
           const item = getSelectedItem();
           if (!item) return;
 
-          item.formData[key] = ["price_per_liter","liters","total_amount"].includes(key)
-            ? toNumberSafe(input.value)
-            : sanitizeText(input.value);
+          if (["price_per_liter", "liters", "total_amount"].includes(key)) {
+            item.formData[key] = toNumberSafe(input.value);
+          } else if (key === "tax_invoice") {
+            item.formData[key] = normalizeCodeString(input.value);
+          } else if (key === "tax_id") {
+            const cleaned = normalizeTaxIdInput(input.value);
+            input.value = cleaned;
+            item.formData[key] = cleaned;
+
+            const mappedCompany = resolveCompanyByTaxIdFrontend(cleaned);
+            if (mappedCompany) {
+              const currentCompany = (els.fields.company.value || "").trim();
+              if (!currentCompany || currentCompany === "-") {
+                els.fields.company.value = mappedCompany;
+                item.formData.company = mappedCompany;
+              }
+            }
+          } else {
+            item.formData[key] = sanitizeText(input.value);
+          }
 
           updateSummary(item.formData);
         });
@@ -1813,10 +1846,23 @@
       };
     }
 
+    function normalizeCodeString(v) {
+      return String(v ?? '').trim();
+    }
+
+    function normalizeTaxIdInput(v) {
+      return String(v ?? '').replace(/\D/g, '');
+    }
+
+    function resolveCompanyByTaxIdFrontend(taxId) {
+      const id = normalizeTaxIdInput(taxId);
+      return KNOWN_COMPANY_BY_TAX_ID[id] || "";
+    }
+
     function normalizeFormData(data = {}) {
       return {
-        tax_invoice: sanitizeText(data.tax_invoice),
-        tax_id: sanitizeText(data.tax_id),
+        tax_invoice: normalizeCodeString(data.tax_invoice),
+        tax_id: normalizeTaxIdInput(data.tax_id),
         date: sanitizeText(data.date),
         company: sanitizeText(data.company),
         fuel_type: sanitizeText(data.fuel_type),
@@ -1829,11 +1875,20 @@
     }
 
     function syncFormToItem(item) {
+      const taxId = normalizeTaxIdInput(els.fields.tax_id.value);
+      let company = sanitizeText(els.fields.company.value);
+
+      const mappedCompany = resolveCompanyByTaxIdFrontend(taxId);
+      if (mappedCompany && (!company || company === "-")) {
+        company = mappedCompany;
+        els.fields.company.value = mappedCompany;
+      }
+
       item.formData = {
-        tax_invoice: sanitizeText(els.fields.tax_invoice.value),
-        tax_id: sanitizeText(els.fields.tax_id.value),
+        tax_invoice: normalizeCodeString(els.fields.tax_invoice.value),
+        tax_id: taxId,
         date: sanitizeText(els.fields.date.value),
-        company: sanitizeText(els.fields.company.value),
+        company: company,
         fuel_type: sanitizeText(els.fields.fuel_type.value),
         price_per_liter: toNumberSafe(els.fields.price_per_liter.value),
         liters: toNumberSafe(els.fields.liters.value),
