@@ -69,27 +69,33 @@ function init() {
 function bindEvents() {
   initQueueListeners();
 
-  els.fileInput.addEventListener("change", async (e) => {
-    await addFiles(Array.from(e.target.files || []));
-    els.fileInput.value = "";
-  });
+  if (els.fileInput) {
+    els.fileInput.addEventListener("change", async (e) => {
+      await addFiles(Array.from(e.target.files || []));
+      els.fileInput.value = "";
+    });
+  }
 
-  els.dropzone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    els.dropzone.classList.add("is-dragover");
-  });
+  if (els.dropzone) {
+    els.dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      els.dropzone.classList.add("is-dragover");
+    });
 
-  els.dropzone.addEventListener("dragleave", () => {
-    els.dropzone.classList.remove("is-dragover");
-  });
+    els.dropzone.addEventListener("dragleave", () => {
+      els.dropzone.classList.remove("is-dragover");
+    });
 
-  els.dropzone.addEventListener("drop", async (e) => {
-    e.preventDefault();
-    els.dropzone.classList.remove("is-dragover");
-    await addFiles(Array.from(e.dataTransfer.files || []));
-  });
+    els.dropzone.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      els.dropzone.classList.remove("is-dragover");
+      await addFiles(Array.from(e.dataTransfer.files || []));
+    });
+  }
 
-  els.btnThemeToggle.addEventListener("click", toggleTheme);
+  if (els.btnThemeToggle) {
+    els.btnThemeToggle.addEventListener("click", toggleTheme);
+  }
 
   if (els.btnOpenSheet) {
     els.btnOpenSheet.addEventListener("click", async () => {
@@ -111,18 +117,24 @@ function bindEvents() {
     });
   }
 
-  els.btnOcrCurrent.addEventListener("click", async () => {
-    const item = getSelectedItem();
-    if (item) await ocrItem(item.id);
-  });
+  if (els.btnOcrCurrent) {
+    els.btnOcrCurrent.addEventListener("click", async () => {
+      const item = getSelectedItem();
+      if (item) await ocrItem(item.id);
+    });
+  }
 
-  els.btnOcrAll.addEventListener("click", ocrAllItems);
-  els.btnAddFiles.addEventListener("click", () => els.fileInput.click());
+  if (els.btnOcrAll) {
+    els.btnOcrAll.addEventListener("click", ocrAllItems);
+  }
+  if (els.btnAddFiles && els.fileInput) {
+    els.btnAddFiles.addEventListener("click", () => els.fileInput.click());
+  }
 
-  els.btnSaveSelected.addEventListener("click", saveSelectedItem);
-  els.btnSaveAllReady.addEventListener("click", saveAllReadyItems);
-  els.btnRemoveSelected.addEventListener("click", removeSelectedItem);
-  els.btnClearAll.addEventListener("click", clearAllItems);
+  if (els.btnSaveSelected) els.btnSaveSelected.addEventListener("click", saveSelectedItem);
+  if (els.btnSaveAllReady) els.btnSaveAllReady.addEventListener("click", saveAllReadyItems);
+  if (els.btnRemoveSelected) els.btnRemoveSelected.addEventListener("click", removeSelectedItem);
+  if (els.btnClearAll) els.btnClearAll.addEventListener("click", clearAllItems);
   if (els.btnPrevItem) {
     els.btnPrevItem.addEventListener("click", () => selectRelativeItem(-1));
   }
@@ -163,11 +175,11 @@ function bindEvents() {
     });
   });
 
-  els.btnRotateLeft.addEventListener("click", () => adjustRotation(-90));
-  els.btnRotateRight.addEventListener("click", () => adjustRotation(90));
-  els.btnZoomOut.addEventListener("click", () => adjustScale(-0.1));
-  els.btnZoomIn.addEventListener("click", () => adjustScale(0.1));
-  els.btnResetView.addEventListener("click", resetViewTransform);
+  if (els.btnRotateLeft) els.btnRotateLeft.addEventListener("click", () => adjustRotation(-90));
+  if (els.btnRotateRight) els.btnRotateRight.addEventListener("click", () => adjustRotation(90));
+  if (els.btnZoomOut) els.btnZoomOut.addEventListener("click", () => adjustScale(-0.1));
+  if (els.btnZoomIn) els.btnZoomIn.addEventListener("click", () => adjustScale(0.1));
+  if (els.btnResetView) els.btnResetView.addEventListener("click", resetViewTransform);
   if (els.btnPreviewPrevZone) {
     els.btnPreviewPrevZone.addEventListener("click", () => selectRelativeItem(-1));
   }
@@ -176,16 +188,18 @@ function bindEvents() {
   }
   initPanInteractions();
 
-  els.btnCopyOcrText.addEventListener("click", async () => {
-    const item = getSelectedItem();
-    if (!item || !item.rawText) return;
-    try {
-      await navigator.clipboard.writeText(item.rawText);
-      showItemStatus("คัดลอกข้อความ OCR แล้ว", "success");
-    } catch (err) {
-      showItemStatus("คัดลอกไม่สำเร็จ: " + err.message, "error");
-    }
-  });
+  if (els.btnCopyOcrText) {
+    els.btnCopyOcrText.addEventListener("click", async () => {
+      const item = getSelectedItem();
+      if (!item || !item.rawText) return;
+      try {
+        await navigator.clipboard.writeText(item.rawText);
+        showItemStatus("คัดลอกข้อความ OCR แล้ว", "success");
+      } catch (err) {
+        showItemStatus("คัดลอกไม่สำเร็จ: " + err.message, "error");
+      }
+    });
+  }
 }
 
 function validateBeforeSave(formData) {
