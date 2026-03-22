@@ -313,3 +313,76 @@ function renderAll() {
 function showWorkspace() {
   els.appWorkspace.classList.remove("hidden");
 }
+
+// ✅ เพิ่ม function นี้ใหม่ (bind ครั้งเดียวตอน init)
+function initQueueListeners() {
+  els.queueList.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (btn) {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if (action === "select") {
+        state.selectedId = id;
+        clearItemStatus();
+        renderAll();
+        return;
+      }
+
+      if (action === "remove") {
+        const item = state.items.find(x => x.id === id);
+        if (!item) return;
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+        state.items = state.items.filter(x => x.id !== id);
+        if (state.selectedId === id) {
+          state.selectedId = state.items[0]?.id || null;
+        }
+        renderAll();
+        return;
+      }
+    }
+
+    const card = e.target.closest(".queue-item");
+    if (card) {
+      state.selectedId = card.dataset.id;
+      clearItemStatus();
+      renderAll();
+    }
+  });
+}
+
+function renderQueue() {
+  if (!state.items.length) {
+    els.queueList.innerHTML = `<div class="empty-note">ยังไม่มีไฟล์ในรายการ</div>`;
+    return;
+  }
+
+  // ✅ แค่ update innerHTML ไม่ต้อง clone / re-bind
+  els.queueList.innerHTML = state.items.map(item => {
+    const active = item.id === state.selectedId ? "active" : "";
+    const sizeMb = (item.file.size / (1024 * 1024)).toFixed(2);
+
+    return `
+      <div class="queue-item ${active}" data-id="${item.id}">
+        <div class="queue-top">
+          <div>
+            <div class="queue-name">${escapeHtml(item.file.name)}</div>
+            <div class="queue-meta">
+              ${escapeHtml(item.file.type || guessMimeTypeByName(item.file.name))}<br>
+              ${sizeMb} MB
+            </div>
+          </div>
+          <span class="badge ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
+        </div>
+
+        ${item.error ? `<div class="queue-meta" style="color:#b91c1c;">${escapeHtml(item.error)}</div>` : ""}
+
+        <div class="queue-actions">
+          <button class="mini-btn select" data-action="select" data-id="${item.id}">เลือก</button>
+          <button class="mini-btn remove" data-action="remove" data-id="${item.id}">ลบ</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}

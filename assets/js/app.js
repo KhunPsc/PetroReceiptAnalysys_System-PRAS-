@@ -11,6 +11,8 @@ function init() {
 }
 
 function bindEvents() {
+  initQueueListeners();
+
   els.fileInput.addEventListener("change", async (e) => {
     await addFiles(Array.from(e.target.files || []));
     els.fileInput.value = "";
@@ -32,6 +34,27 @@ function bindEvents() {
   });
 
   els.btnThemeToggle.addEventListener("click", toggleTheme);
+
+  // ✅ btnOpenSheet handler
+  if (els.btnOpenSheet) {
+    els.btnOpenSheet.addEventListener("click", async () => {
+      try {
+        els.btnOpenSheet.disabled = true;
+        els.btnOpenSheet.textContent = "⏳ กำลังโหลด...";
+        const result = await callBackendPost({ action: "sheetUrl" });
+        if (result.success && result.url) {
+          window.open(result.url, "_blank");
+        } else {
+          showGlobalStatus("ไม่สามารถดึง URL ของ Sheet ได้: " + (result.error || ""), "error");
+        }
+      } catch (err) {
+        showGlobalStatus("เกิดข้อผิดพลาด: " + err.message, "error");
+      } finally {
+        els.btnOpenSheet.disabled = false;
+        els.btnOpenSheet.textContent = "📊 เปิด Google Sheet";
+      }
+    });
+  }
 
   els.btnOcrCurrent.addEventListener("click", () => {
     const item = getSelectedItem();
@@ -62,7 +85,6 @@ function bindEvents() {
         const cleaned = normalizeTaxIdInput(input.value);
         input.value = cleaned;
         item.formData[key] = cleaned;
-
         const mappedCompany = resolveCompanyByTaxIdFrontend(cleaned);
         if (mappedCompany) {
           const currentCompany = (els.fields.company.value || "").trim();
@@ -97,6 +119,15 @@ function bindEvents() {
   });
 }
 
+// ✅ validate ก่อน save
+function validateBeforeSave(formData) {
+  const errors = [];
+  if (!formData.date || formData.date === "-") errors.push("วันที่");
+  if (!formData.total_amount || formData.total_amount === 0) errors.push("ยอดรวม");
+  if (!formData.company || formData.company === "-") errors.push("บริษัท/ปั๊ม");
+  return errors;
+}
+
 async function addFiles(files) {
   if (!files.length) return;
 
@@ -110,7 +141,7 @@ async function addFiles(files) {
 
   for (const file of validFiles) {
     const base64 = await fileToBase64(file);
-    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileExt = file.name.split(".").pop() || "jpg";
     const safeName = `receipt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${fileExt}`;
 
     state.items.push({
@@ -118,7 +149,7 @@ async function addFiles(files) {
       requestId: randomId(),
       file,
       fileData: {
-        name: safeName, // Forced English filename to prevent 502/Encoding issues
+        name: safeName,
         type: file.type || guessMimeTypeByName(file.name),
         size: file.size,
         data: base64
@@ -130,10 +161,7 @@ async function addFiles(files) {
       rawText: "",
       ocrDone: false,
       saveResult: null,
-      view: {
-        rotation: 0,
-        scale: 1
-      }
+      view: { rotation: 0, scale: 1 }
     });
   }
 
@@ -182,7 +210,6 @@ async function ocrItem(itemId) {
 
     showItemStatus(`กำลังอ่าน OCR: ${item.file.name}`, "info");
 
-    // --- PREPROCESS IMAGE ---
     let payloadToOcr = item.fileData;
     if (item.file.type.startsWith("image/")) {
       try {
@@ -193,23 +220,13 @@ async function ocrItem(itemId) {
           threshold: 128,
           scale: 1.2
         });
-        payloadToOcr = { 
-          ...item.fileData, 
-          data: processedBase64,
-          model: els.ocrModel.value // Pass selected model
-        };
+        payloadToOcr = { ...item.fileData, data: processedBase64, model: els.ocrModel.value };
       } catch (err) {
         console.warn("Preprocessing failed, using original image", err);
-        payloadToOcr = { 
-          ...item.fileData,
-          model: els.ocrModel.value
-        };
+        payloadToOcr = { ...item.fileData, model: els.ocrModel.value };
       }
     } else {
-      payloadToOcr = { 
-        ...item.fileData,
-        model: els.ocrModel.value
-      };
+      payloadToOcr = { ...item.fileData, model: els.ocrModel.value };
     }
 
     const result = await callBackendPost({
@@ -218,11 +235,9 @@ async function ocrItem(itemId) {
       payload: payloadToOcr
     });
 
-    if (!result.success) {
-      throw new Error(result.error || "OCR ไม่สำเร็จ");
-    }
+    if (!result.success) throw new Error(result.error || "OCR ไม่สำเร็จ");
 
-    item.rawText = result.rawText || result.raw_text || ""; // Handle both old/new naming
+    item.rawText = result.rawText || result.raw_text || "";
     item.formData = normalizeFormData(result.data || {});
     item.ocrDone = true;
     item.status = "ready";
@@ -260,6 +275,10 @@ async function ocrAllItems() {
       renderAll();
       showGlobalStatus(`กำลัง OCR (${i + 1}/${targets.length}) : ${item.file.name}`, "info");
       await ocrItem(item.id);
+      // ✅ delay ระหว่างไฟล์ป้องกัน rate limit
+      if (i < targets.length - 1) {
+        await new Promise(r => setTimeout(r, 1500));
+      }
     }
     showGlobalStatus("OCR ครบทุกไฟล์ที่เลือกแล้ว", "success");
   } finally {
@@ -281,6 +300,13 @@ async function saveItem(itemId) {
   try {
     setBusy(true);
     syncFormToItem(item);
+
+    // ✅ validate ก่อน save
+    const errs = validateBeforeSave(item.formData);
+    if (errs.length) {
+      throw new Error("กรุณากรอกข้อมูลให้ครบ: " + errs.join(", "));
+    }
+
     showItemStatus(`กำลังบันทึก: ${item.file.name}`, "info");
 
     const result = await callBackendPost({
@@ -290,9 +316,7 @@ async function saveItem(itemId) {
       fileData: item.fileData
     });
 
-    if (!result.success) {
-      throw new Error(result.error || "บันทึกข้อมูลไม่สำเร็จ");
-    }
+    if (!result.success) throw new Error(result.error || "บันทึกข้อมูลไม่สำเร็จ");
 
     item.status = "saved";
     item.error = "";
@@ -300,8 +324,7 @@ async function saveItem(itemId) {
 
     renderAll();
     showItemStatus(
-      `บันทึกสำเร็จ: ${item.file.name}\nแถวที่บันทึก: ${result.row || "-"}`
-      + (result.requestId ? `\nrequestId: ${result.requestId}` : ""),
+      `บันทึกสำเร็จ: ${item.file.name}\nแถวที่บันทึก: ${result.row || "-"}`,
       "success"
     );
 
@@ -349,9 +372,7 @@ async function callBackendPost(bodyObj) {
 
   const resp = await fetch(SCRIPT_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(bodyObj),
     redirect: "follow"
   });
@@ -434,37 +455,3 @@ function selectNextActionable() {
 
 // Start Application
 init();
-// ✅ เพิ่ม delay ระหว่างไฟล์ใน ocrAllItems
-await ocrItem(item.id);
-if (i < targets.length - 1) {
-  await new Promise(r => setTimeout(r, 1500));
-}
-
-// ✅ เพิ่มใน saveItem ก่อน callBackendPost
-function validateBeforeSave(formData) {
-  const errors = [];
-  if (!formData.date || formData.date === '-') errors.push('วันที่');
-  if (!formData.total_amount || formData.total_amount === 0) errors.push('ยอดรวม');
-  if (!formData.company || formData.company === '-') errors.push('บริษัท/ปั๊ม');
-  return errors;
-}
-
-// ใน saveItem เพิ่ม:
-const errs = validateBeforeSave(item.formData);
-if (errs.length) {
-  throw new Error('กรุณากรอกข้อมูลให้ครบ: ' + errs.join(', '));
-}
-
-// เพิ่มใน bindEvents() ใน app.js
-els.btnOpenSheet.addEventListener("click", async () => {
-  try {
-    const result = await callBackendPost({ action: "sheetUrl" });
-    if (result.success && result.url) {
-      window.open(result.url, "_blank");
-    } else {
-      showGlobalStatus("ไม่สามารถดึง URL ของ Sheet ได้", "error");
-    }
-  } catch (err) {
-    showGlobalStatus("เกิดข้อผิดพลาด: " + err.message, "error");
-  }
-});
