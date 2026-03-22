@@ -491,9 +491,10 @@ async function saveItem(itemId) {
     item.saveResult = result;
 
     renderAll();
+    const warningText = result.warning ? `\nหมายเหตุ: ${result.warning}` : "";
     showItemStatus(
-      `บันทึกสำเร็จ: ${item.file.name}\nแถวที่บันทึก: ${result.row || "-"}`,
-      "success"
+      `บันทึกสำเร็จ: ${item.file.name}\nแถวที่บันทึก: ${result.row || "-"}${warningText}`,
+      result.warning ? "warn" : "success"
     );
 
     selectNextActionable();
