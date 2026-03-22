@@ -16,3 +16,6 @@ npm-debug.log
 
 # Project specific samples (Optional: comment out if you want to upload samples)
 # sample/
+
+# Backend (Private Google Apps Script)
+BackEnd/
