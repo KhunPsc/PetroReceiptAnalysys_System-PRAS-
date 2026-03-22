@@ -101,8 +101,21 @@
         <div style="margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 12px;">
           <label for="ocrModel" style="font-size: 14px; font-weight: 800; color: var(--text);">เลือก Model OCR:</label>
           <select id="ocrModel" class="field" style="width: auto; margin-bottom: 0; padding: 8px 12px; border-radius: 12px;">
-            <option value="typhoon-ocr">Typhoon OCR (แนะนำ)</option>
-            <option value="typhoon-ocr-preview">Typhoon OCR Preview (ใหม่ล่าสุด)</option>
+            <optgroup label="Google Gemini (แนะนำ - เสถียร/แม่นยำ)">
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash (เร็วที่สุด/ฉลาดมาก)</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash (มาตรฐาน/ประหยัด)</option>
+              <option value="gemini-1.5-pro">Gemini 1.5 Pro (แม่นยำสูง/ติด Rate Limit ง่าย)</option>
+            </optgroup>
+            <optgroup label="Experimental & Future (ตัวใหม่ล่าสุด)">
+              <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+              <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Exp</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Future Ready)</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro (Future Ready)</option>
+            </optgroup>
+            <optgroup label="Typhoon OCR (Cloud)">
+              <option value="typhoon-ocr">Typhoon OCR</option>
+              <option value="typhoon-ocr-preview">Typhoon OCR Preview</option>
+            </optgroup>
           </select>
         </div>
 
