@@ -1,0 +1,18 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node (if used later)
+node_modules/
+npm-debug.log
+
+# Gemini CLI / Workspace temp files
+.gemini/
+.geminiignore
+
+# Local environment variables
+.env
+.env.local
+
+# Project specific samples (Optional: comment out if you want to upload samples)
+# sample/
