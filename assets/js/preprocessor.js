@@ -14,8 +14,9 @@ const Preprocessor = {
       contrast = 1.4, 
       brightness = 1.0,
       threshold = 128, 
-      scale = 1.0,     // Reduced from 1.5 to 1.0 to prevent 502/Timeout
-      quality = 0.75   // Added quality control
+      scale = 1.0,
+      quality = 0.75,
+      maxWidth = 1200 // Max width to prevent oversized payload (502 Gateway issues)
     } = options;
 
     return new Promise((resolve, reject) => {
@@ -24,9 +25,20 @@ const Preprocessor = {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
+        // Calculate aspect ratio and final dimensions
+        let targetWidth = img.width * scale;
+        let targetHeight = img.height * scale;
 
+        if (targetWidth > maxWidth) {
+          const ratio = maxWidth / targetWidth;
+          targetWidth = maxWidth;
+          targetHeight = targetHeight * ratio;
+        }
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        // Draw and process
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         ctx.filter = `grayscale(${grayscale ? 1 : 0}) contrast(${contrast}) brightness(${brightness})`;
@@ -48,7 +60,6 @@ const Preprocessor = {
           ctx.putImageData(imageData, 0, 0);
         }
 
-        // Reduced quality to 0.75 to make the payload smaller
         resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
       };
       img.onerror = reject;
