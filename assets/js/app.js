@@ -1,7 +1,21 @@
 const state = {
   items: [],
   selectedId: null,
-  busy: false
+  busy: false,
+  dragging: {
+    active: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0
+  },
+  ocrSession: {
+    active: false,
+    stopRequested: false,
+    current: 0,
+    total: 0
+  },
+  activeOcrAbortController: null
 };
 
 function formatBackendErrorMessage(message) {
@@ -77,7 +91,6 @@ function bindEvents() {
 
   els.btnThemeToggle.addEventListener("click", toggleTheme);
 
-  // ✅ btnOpenSheet handler
   if (els.btnOpenSheet) {
     els.btnOpenSheet.addEventListener("click", async () => {
       try {
@@ -98,21 +111,28 @@ function bindEvents() {
     });
   }
 
-  els.btnOcrCurrent.addEventListener("click", () => {
+  els.btnOcrCurrent.addEventListener("click", async () => {
     const item = getSelectedItem();
-    if (item) ocrItem(item.id);
-  });
-
-  els.btnOcrSelected.addEventListener("click", () => {
-    const item = getSelectedItem();
-    if (item) ocrItem(item.id);
+    if (item) await ocrItem(item.id);
   });
 
   els.btnOcrAll.addEventListener("click", ocrAllItems);
+  els.btnAddFiles.addEventListener("click", () => els.fileInput.click());
+
   els.btnSaveSelected.addEventListener("click", saveSelectedItem);
   els.btnSaveAllReady.addEventListener("click", saveAllReadyItems);
   els.btnRemoveSelected.addEventListener("click", removeSelectedItem);
   els.btnClearAll.addEventListener("click", clearAllItems);
+  if (els.btnPrevItem) {
+    els.btnPrevItem.addEventListener("click", () => selectRelativeItem(-1));
+  }
+  if (els.btnNextItem) {
+    els.btnNextItem.addEventListener("click", () => selectRelativeItem(1));
+  }
+
+  if (els.btnStopOcr) {
+    els.btnStopOcr.addEventListener("click", requestStopOcrSession);
+  }
 
   Object.entries(els.fields).forEach(([key, input]) => {
     input.addEventListener("input", () => {
@@ -148,6 +168,13 @@ function bindEvents() {
   els.btnZoomOut.addEventListener("click", () => adjustScale(-0.1));
   els.btnZoomIn.addEventListener("click", () => adjustScale(0.1));
   els.btnResetView.addEventListener("click", resetViewTransform);
+  if (els.btnPreviewPrevZone) {
+    els.btnPreviewPrevZone.addEventListener("click", () => selectRelativeItem(-1));
+  }
+  if (els.btnPreviewNextZone) {
+    els.btnPreviewNextZone.addEventListener("click", () => selectRelativeItem(1));
+  }
+  initPanInteractions();
 
   els.btnCopyOcrText.addEventListener("click", async () => {
     const item = getSelectedItem();
@@ -161,7 +188,6 @@ function bindEvents() {
   });
 }
 
-// ✅ validate ก่อน save
 function validateBeforeSave(formData) {
   const errors = [];
   if (!formData.date || formData.date === "-") errors.push("วันที่");
@@ -203,7 +229,7 @@ async function addFiles(files) {
       rawText: "",
       ocrDone: false,
       saveResult: null,
-      view: { rotation: 0, scale: 1 }
+      view: { rotation: 0, scale: 1, panX: 0, panY: 0 }
     });
   }
 
@@ -211,6 +237,7 @@ async function addFiles(files) {
     state.selectedId = state.items[0].id;
   }
 
+  showWorkspace();
   renderAll();
   showGlobalStatus(`เพิ่มไฟล์แล้ว ${validFiles.length} ไฟล์`, "success");
 }
@@ -223,6 +250,7 @@ function clearAllItems() {
   state.selectedId = null;
   clearGlobalStatus();
   clearItemStatus();
+  hideOcrProgressModal();
   renderAll();
 }
 
@@ -239,71 +267,167 @@ function removeSelectedItem() {
   renderAll();
 }
 
+function isAbortError(err) {
+  const msg = String((err && err.message) || err || "").toLowerCase();
+  return msg.includes("abort") || msg.includes("stopped by user") || msg.includes("หยุดโดยผู้ใช้");
+}
+
+function requestStopOcrSession() {
+  if (!state.ocrSession.active) return;
+  state.ocrSession.stopRequested = true;
+
+  if (state.activeOcrAbortController) {
+    try {
+      state.activeOcrAbortController.abort();
+    } catch (err) {
+      console.warn("Abort OCR request failed", err);
+    }
+  }
+
+  const selected = getSelectedItem();
+  showOcrProgressModal(
+    Math.max(state.ocrSession.current, 1),
+    state.ocrSession.total,
+    selected ? selected.file.name : "-",
+    "กำลังหยุดการประมวลผล..."
+  );
+}
+
+function startOcrSession(total) {
+  state.ocrSession.active = true;
+  state.ocrSession.stopRequested = false;
+  state.ocrSession.current = 0;
+  state.ocrSession.total = total;
+  showOcrProgressModal(0, total, "-", "กำลังเตรียมการประมวลผล...");
+}
+
+function finishOcrSession() {
+  state.ocrSession.active = false;
+  state.ocrSession.stopRequested = false;
+  state.ocrSession.current = 0;
+  state.ocrSession.total = 0;
+  state.activeOcrAbortController = null;
+  hideOcrProgressModal();
+}
+
+async function processOcrItem(item) {
+  item.status = "processing";
+  item.error = "";
+  renderAll();
+
+  showItemStatus(`กำลังอ่าน OCR: ${item.file.name}`, "info");
+
+  const selectedModel = getSelectedOcrModel();
+  let payloadToOcr = item.fileData;
+  if (item.file.type.startsWith("image/")) {
+    try {
+      showItemStatus("กำลังเตรียมรูปภาพ (Preprocessing)...", "info");
+      const processedBase64 = await Preprocessor.process(item.fileData.data, {
+        grayscale: true,
+        contrast: 1.4,
+        threshold: 128,
+        scale: 1.2
+      });
+      payloadToOcr = {
+        ...item.fileData,
+        data: processedBase64,
+        type: "image/jpeg",
+        name: replaceFileExtension(item.fileData.name, "jpg"),
+        model: selectedModel
+      };
+    } catch (err) {
+      console.warn("Preprocessing failed, using original image", err);
+      payloadToOcr = { ...item.fileData, model: selectedModel };
+    }
+  } else {
+    payloadToOcr = { ...item.fileData, model: selectedModel };
+  }
+
+  const controller = new AbortController();
+  state.activeOcrAbortController = controller;
+
+  const result = await callBackendPost({
+    action: "ocr",
+    requestId: item.requestId,
+    payload: payloadToOcr
+  }, { signal: controller.signal });
+
+  if (!result.success) {
+    throw new Error(enrichOcrErrorMessage(result, "OCR ไม่สำเร็จ"));
+  }
+
+  item.rawText = result.rawText || result.raw_text || "";
+  item.formData = normalizeFormData(result.data || {});
+  item.ocrDone = true;
+  item.status = "ready";
+  item.error = "";
+
+  renderAll();
+  showItemStatus(`OCR สำเร็จ: ${item.file.name}\nตรวจสอบข้อมูลแล้วกดยืนยันบันทึกได้เลย`, "success");
+}
+
+async function runOcrForItems(items) {
+  if (!items.length) return;
+
+  showWorkspace();
+  setBusy(true);
+  clearGlobalStatus();
+  startOcrSession(items.length);
+
+  let processedCount = 0;
+
+  try {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (state.ocrSession.stopRequested) break;
+
+      state.selectedId = item.id;
+      state.ocrSession.current = i + 1;
+      renderAll();
+      showOcrProgressModal(i + 1, items.length, item.file.name, "กำลังประมวลผล OCR...");
+      showGlobalStatus(`กำลัง OCR (${i + 1}/${items.length}) : ${item.file.name}`, "info");
+
+      try {
+        await processOcrItem(item);
+        processedCount += 1;
+      } catch (err) {
+        if (isAbortError(err) && state.ocrSession.stopRequested) {
+          item.status = item.ocrDone ? "ready" : "pending";
+          item.error = "หยุดโดยผู้ใช้";
+          renderAll();
+          break;
+        }
+
+        console.error(err);
+        item.status = "error";
+        item.error = formatBackendErrorMessage(err.message || String(err));
+        renderAll();
+        showItemStatus(`OCR ล้มเหลว: ${item.file.name}\n${item.error}`, "error");
+      } finally {
+        state.activeOcrAbortController = null;
+      }
+
+      if (i < items.length - 1 && !state.ocrSession.stopRequested) {
+        await new Promise(r => setTimeout(r, 900));
+      }
+    }
+
+    if (state.ocrSession.stopRequested) {
+      showGlobalStatus(`หยุดการประมวลผลแล้ว (${processedCount}/${items.length} ไฟล์)`, "warn");
+    } else {
+      showGlobalStatus(`OCR เสร็จแล้ว (${processedCount}/${items.length} ไฟล์)`, "success");
+    }
+  } finally {
+    finishOcrSession();
+    setBusy(false);
+    renderAll();
+  }
+}
+
 async function ocrItem(itemId) {
   const item = state.items.find(x => x.id === itemId);
   if (!item) return;
-
-  showWorkspace();
-  try {
-    setBusy(true);
-    item.status = "processing";
-    item.error = "";
-    renderAll();
-
-    showItemStatus(`กำลังอ่าน OCR: ${item.file.name}`, "info");
-
-    let payloadToOcr = item.fileData;
-    if (item.file.type.startsWith("image/")) {
-      try {
-        showItemStatus(`กำลังเตรียมรูปภาพ (Preprocessing)...`, "info");
-        const processedBase64 = await Preprocessor.process(item.fileData.data, {
-          grayscale: true,
-          contrast: 1.4,
-          threshold: 128,
-          scale: 1.2
-        });
-        payloadToOcr = {
-          ...item.fileData,
-          data: processedBase64,
-          type: "image/jpeg",
-          name: replaceFileExtension(item.fileData.name, "jpg"),
-          model: els.ocrModel.value
-        };
-      } catch (err) {
-        console.warn("Preprocessing failed, using original image", err);
-        payloadToOcr = { ...item.fileData, model: els.ocrModel.value };
-      }
-    } else {
-      payloadToOcr = { ...item.fileData, model: els.ocrModel.value };
-    }
-
-    const result = await callBackendPost({
-      action: "ocr",
-      requestId: item.requestId,
-      payload: payloadToOcr
-    });
-
-    if (!result.success) {
-      throw new Error(enrichOcrErrorMessage(result, "OCR ไม่สำเร็จ"));
-    }
-
-    item.rawText = result.rawText || result.raw_text || "";
-    item.formData = normalizeFormData(result.data || {});
-    item.ocrDone = true;
-    item.status = "ready";
-    item.error = "";
-
-    renderAll();
-    showItemStatus(`OCR สำเร็จ: ${item.file.name}\nตรวจสอบข้อมูลแล้วกดยืนยันบันทึกได้เลย`, "success");
-  } catch (err) {
-    console.error(err);
-    item.status = "error";
-    item.error = formatBackendErrorMessage(err.message || String(err));
-    renderAll();
-    showItemStatus(`OCR ล้มเหลว: ${item.file.name}\n${item.error}`, "error");
-  } finally {
-    setBusy(false);
-  }
+  await runOcrForItems([item]);
 }
 
 async function ocrAllItems() {
@@ -315,26 +439,7 @@ async function ocrAllItems() {
     return;
   }
 
-  setBusy(true);
-  clearGlobalStatus();
-
-  try {
-    for (let i = 0; i < targets.length; i++) {
-      const item = targets[i];
-      state.selectedId = item.id;
-      renderAll();
-      showGlobalStatus(`กำลัง OCR (${i + 1}/${targets.length}) : ${item.file.name}`, "info");
-      await ocrItem(item.id);
-      // ✅ delay ระหว่างไฟล์ป้องกัน rate limit
-      if (i < targets.length - 1) {
-        await new Promise(r => setTimeout(r, 1500));
-      }
-    }
-    showGlobalStatus("OCR ครบทุกไฟล์ที่เลือกแล้ว", "success");
-  } finally {
-    setBusy(false);
-    renderAll();
-  }
+  await runOcrForItems(targets);
 }
 
 async function saveSelectedItem() {
@@ -351,7 +456,6 @@ async function saveItem(itemId) {
     setBusy(true);
     syncFormToItem(item);
 
-    // ✅ validate ก่อน save
     const errs = validateBeforeSave(item.formData);
     if (errs.length) {
       throw new Error("กรุณากรอกข้อมูลให้ครบ: " + errs.join(", "));
@@ -415,17 +519,26 @@ async function saveAllReadyItems() {
   }
 }
 
-async function callBackendPost(bodyObj) {
+async function callBackendPost(bodyObj, opts = {}) {
   if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")) {
     throw new Error("กรุณาใส่ SCRIPT_URL ในโค้ดก่อนใช้งาน");
   }
 
-  const resp = await fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(bodyObj),
-    redirect: "follow"
-  });
+  let resp;
+  try {
+    resp = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(bodyObj),
+      redirect: "follow",
+      signal: opts.signal
+    });
+  } catch (err) {
+    if (opts.signal && opts.signal.aborted) {
+      throw new Error("OCR request aborted by user");
+    }
+    throw err;
+  }
 
   const text = await resp.text();
 
@@ -451,6 +564,10 @@ function adjustScale(delta) {
   if (!item) return;
   const next = Math.max(0.2, Math.min(4, (item.view.scale || 1) + delta));
   item.view.scale = round3(next);
+  if (item.view.scale <= 1) {
+    item.view.panX = 0;
+    item.view.panY = 0;
+  }
   applyImageTransform(item);
 }
 
@@ -459,6 +576,8 @@ function resetViewTransform() {
   if (!item) return;
   item.view.rotation = 0;
   item.view.scale = 1;
+  item.view.panX = 0;
+  item.view.panY = 0;
   applyImageTransform(item);
 }
 
@@ -468,6 +587,9 @@ function getSelectedItem() {
 
 function setBusy(flag) {
   state.busy = !!flag;
+  if (state.busy) {
+    state.dragging.active = false;
+  }
   updateButtons();
 }
 
@@ -503,5 +625,50 @@ function selectNextActionable() {
   }
 }
 
-// Start Application
+function selectRelativeItem(direction) {
+  if (!state.items.length) return;
+  const currentIndex = state.items.findIndex(x => x.id === state.selectedId);
+  const startIndex = currentIndex >= 0 ? currentIndex : 0;
+  const nextIndex = Math.max(0, Math.min(state.items.length - 1, startIndex + direction));
+  state.selectedId = state.items[nextIndex].id;
+  clearItemStatus();
+  renderAll();
+}
+
+function initPanInteractions() {
+  if (!els.previewImageWrap) return;
+
+  els.previewImageWrap.addEventListener("mousedown", (e) => {
+    const item = getSelectedItem();
+    if (!item || (item.view.scale || 1) <= 1) return;
+
+    state.dragging.active = true;
+    state.dragging.startX = e.clientX;
+    state.dragging.startY = e.clientY;
+    state.dragging.originX = item.view.panX || 0;
+    state.dragging.originY = item.view.panY || 0;
+    els.previewImageWrap.classList.add("is-dragging");
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!state.dragging.active) return;
+    const item = getSelectedItem();
+    if (!item) return;
+
+    const dx = e.clientX - state.dragging.startX;
+    const dy = e.clientY - state.dragging.startY;
+    item.view.panX = round2(state.dragging.originX + dx);
+    item.view.panY = round2(state.dragging.originY + dy);
+    applyImageTransform(item);
+  });
+
+  window.addEventListener("mouseup", () => {
+    state.dragging.active = false;
+    if (els.previewImageWrap) {
+      els.previewImageWrap.classList.remove("is-dragging");
+    }
+  });
+}
+
 init();

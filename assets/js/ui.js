@@ -7,13 +7,15 @@ const els = {
   itemStatus: document.getElementById("itemStatus"),
 
   btnThemeToggle: document.getElementById("btnThemeToggle"),
-  // ✅ FIX: เพิ่ม btnOpenSheet
   btnOpenSheet: document.getElementById("btnOpenSheet"),
 
   btnOcrCurrent: document.getElementById("btnOcrCurrent"),
   btnOcrAll: document.getElementById("btnOcrAll"),
+  btnAddFiles: document.getElementById("btnAddFiles"),
   btnSaveAllReady: document.getElementById("btnSaveAllReady"),
   btnClearAll: document.getElementById("btnClearAll"),
+  btnPrevItem: document.getElementById("btnPrevItem"),
+  btnNextItem: document.getElementById("btnNextItem"),
 
   previewPlaceholder: document.getElementById("previewPlaceholder"),
   previewImageWrap: document.getElementById("previewImageWrap"),
@@ -26,13 +28,14 @@ const els = {
   btnZoomOut: document.getElementById("btnZoomOut"),
   btnZoomIn: document.getElementById("btnZoomIn"),
   btnResetView: document.getElementById("btnResetView"),
+  btnPreviewPrevZone: document.getElementById("btnPreviewPrevZone"),
+  btnPreviewNextZone: document.getElementById("btnPreviewNextZone"),
 
   btnCopyOcrText: document.getElementById("btnCopyOcrText"),
   ocrRawText: document.getElementById("ocrRawText"),
 
   editorEmpty: document.getElementById("editorEmpty"),
   editorPanel: document.getElementById("editorPanel"),
-  btnOcrSelected: document.getElementById("btnOcrSelected"),
   btnSaveSelected: document.getElementById("btnSaveSelected"),
   btnRemoveSelected: document.getElementById("btnRemoveSelected"),
 
@@ -60,7 +63,12 @@ const els = {
 
   mainToolbar: document.getElementById("mainToolbar"),
   appWorkspace: document.getElementById("appWorkspace"),
-  ocrModel: document.getElementById("ocrModel")
+  ocrModelRadios: document.querySelectorAll('input[name="ocrModel"]'),
+
+  ocrProgressModal: document.getElementById("ocrProgressModal"),
+  ocrProgressText: document.getElementById("ocrProgressText"),
+  ocrProgressBar: document.getElementById("ocrProgressBar"),
+  btnStopOcr: document.getElementById("btnStopOcr")
 };
 
 function applySavedTheme() {
@@ -92,6 +100,17 @@ function renderCounts() {
   els.countError.textContent = state.items.filter(x => x.status === "error").length;
 }
 
+function buildQueueThumb(item) {
+  const isImage = (item.file.type || "").startsWith("image/");
+  if (isImage && item.previewUrl) {
+    return `<img class="queue-thumb-large" src="${item.previewUrl}" alt="preview" />`;
+  }
+  if ((item.file.type || "").includes("pdf") || item.file.name.toLowerCase().endsWith(".pdf")) {
+    return `<div class="queue-thumb-pdf-large">📄</div>`;
+  }
+  return `<div class="queue-thumb-pdf-large">📎</div>`;
+}
+
 function renderQueue() {
   if (!state.items.length) {
     els.queueList.innerHTML = `<div class="empty-note">ยังไม่มีไฟล์ในรายการ</div>`;
@@ -100,74 +119,40 @@ function renderQueue() {
 
   els.queueList.innerHTML = state.items.map(item => {
     const active = item.id === state.selectedId ? "active" : "";
+    const savedState = item.status === "saved" ? "saved-state" : "";
     const sizeMb = (item.file.size / (1024 * 1024)).toFixed(2);
+    const canProcess = !state.busy && (item.status === "pending" || item.status === "error");
 
     return `
-      <div class="queue-item ${active}" data-id="${item.id}">
-        <div class="queue-top">
-          <div>
-            <div class="queue-name">${escapeHtml(item.file.name)}</div>
-            <div class="queue-meta">
-              ${escapeHtml(item.file.type || guessMimeTypeByName(item.file.name))}<br>
-              ${sizeMb} MB
+      <div class="queue-item ${active} ${savedState}" data-id="${item.id}">
+        <div class="queue-item-body">
+          <div class="queue-preview-panel">
+            ${buildQueueThumb(item)}
+          </div>
+          <div class="queue-main-panel">
+            <div class="queue-top">
+              <div>
+                <div class="queue-name">${escapeHtml(item.file.name)}</div>
+                <div class="queue-meta">
+                  ${escapeHtml(item.file.type || guessMimeTypeByName(item.file.name))}<br>
+                  ${sizeMb} MB
+                </div>
+              </div>
+              <span class="badge ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
+            </div>
+
+            ${item.error ? `<div class="queue-meta" style="color:#b91c1c;">${escapeHtml(item.error)}</div>` : ""}
+
+            <div class="queue-actions queue-actions-right">
+              <button class="mini-btn process" data-action="process" data-id="${item.id}" ${canProcess ? "" : "disabled"}>ประมวลผล</button>
+              <button class="mini-btn select" data-action="select" data-id="${item.id}">เลือก</button>
+              <button class="mini-btn remove" data-action="remove" data-id="${item.id}">ลบ</button>
             </div>
           </div>
-          <span class="badge ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
-        </div>
-
-        ${item.error ? `<div class="queue-meta" style="color:#b91c1c;">${escapeHtml(item.error)}</div>` : ""}
-
-        <div class="queue-actions">
-          <button class="mini-btn select" data-action="select" data-id="${item.id}">เลือก</button>
-          <button class="mini-btn remove" data-action="remove" data-id="${item.id}">ลบ</button>
         </div>
       </div>
     `;
   }).join("");
-
-  // ✅ FIX: ใช้ event delegation 1 listener แทน querySelectorAll forEach ทุก render
-  // clone node เพื่อล้าง listener เก่าออกก่อน แล้ว re-attach ใหม่
-  const oldList = els.queueList;
-  const newList = oldList.cloneNode(true);
-  oldList.parentNode.replaceChild(newList, oldList);
-  els.queueList = newList;
-
-  els.queueList.addEventListener("click", (e) => {
-    // handle data-action buttons (select / remove)
-    const btn = e.target.closest("[data-action]");
-    if (btn) {
-      e.stopPropagation();
-      const action = btn.dataset.action;
-      const id = btn.dataset.id;
-
-      if (action === "select") {
-        state.selectedId = id;
-        clearItemStatus();
-        renderAll();
-        return;
-      }
-
-      if (action === "remove") {
-        const item = state.items.find(x => x.id === id);
-        if (!item) return;
-        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
-        state.items = state.items.filter(x => x.id !== id);
-        if (state.selectedId === id) {
-          state.selectedId = state.items[0]?.id || null;
-        }
-        renderAll();
-        return;
-      }
-    }
-
-    // handle click on queue-item card (select item)
-    const card = e.target.closest(".queue-item");
-    if (card) {
-      state.selectedId = card.dataset.id;
-      clearItemStatus();
-      renderAll();
-    }
-  });
 }
 
 function renderPreview() {
@@ -176,6 +161,8 @@ function renderPreview() {
   if (!item) {
     els.previewPlaceholder.classList.remove("hidden");
     els.previewImageWrap.classList.add("hidden");
+    els.previewImageWrap.classList.remove("is-pan-enabled");
+    els.previewImageWrap.classList.remove("is-dragging");
     els.previewPdf.classList.add("hidden");
     els.previewPlaceholder.textContent = "ยังไม่ได้เลือกไฟล์";
     return;
@@ -199,6 +186,7 @@ function renderPreview() {
     els.previewPlaceholder.classList.remove("hidden");
     els.previewPlaceholder.textContent = item.file.name;
     els.previewImageWrap.classList.add("hidden");
+    els.previewImageWrap.classList.remove("is-pan-enabled");
     els.previewPdf.classList.add("hidden");
   }
 }
@@ -240,29 +228,63 @@ function fillEditor(data) {
 function updateButtons() {
   const selected = getSelectedItem();
   const hasItems = state.items.length > 0;
+  const isSingle = state.items.length === 1;
+  const isMulti = state.items.length > 1;
   const hasReady = state.items.some(x => x.status === "ready");
   const canViewImage = selected && (selected.file.type || "").startsWith("image/");
 
+  if (hasItems && isSingle) {
+    els.btnOcrCurrent.classList.remove("hidden");
+    els.btnOcrAll.classList.add("hidden");
+  } else if (hasItems) {
+    els.btnOcrCurrent.classList.add("hidden");
+    els.btnOcrAll.classList.remove("hidden");
+  } else {
+    els.btnOcrCurrent.classList.remove("hidden");
+    els.btnOcrAll.classList.add("hidden");
+  }
+
   els.btnOcrCurrent.disabled = state.busy || !selected;
-  els.btnOcrSelected.disabled = state.busy || !selected;
-  els.btnSaveSelected.disabled = state.busy || !selected;
-  els.btnRemoveSelected.disabled = state.busy || !selected;
   els.btnOcrAll.disabled = state.busy || !hasItems;
+  els.btnAddFiles.disabled = state.busy;
+  els.btnSaveSelected.disabled = state.busy || !selected;
   els.btnSaveAllReady.disabled = state.busy || !hasReady;
+  if (hasReady && isMulti) {
+    els.btnSaveAllReady.classList.remove("hidden");
+  } else {
+    els.btnSaveAllReady.classList.add("hidden");
+  }
+  els.btnRemoveSelected.disabled = state.busy || !selected;
   els.btnClearAll.disabled = state.busy || !hasItems;
+  if (els.btnPrevItem) els.btnPrevItem.disabled = state.busy || !hasItems || state.items.length < 2;
+  if (els.btnNextItem) els.btnNextItem.disabled = state.busy || !hasItems || state.items.length < 2;
 
   els.btnRotateLeft.disabled = state.busy || !canViewImage;
   els.btnRotateRight.disabled = state.busy || !canViewImage;
   els.btnZoomIn.disabled = state.busy || !canViewImage;
   els.btnZoomOut.disabled = state.busy || !canViewImage;
   els.btnResetView.disabled = state.busy || !canViewImage;
+  if (els.btnPreviewPrevZone) els.btnPreviewPrevZone.disabled = state.busy || !hasItems || state.items.length < 2;
+  if (els.btnPreviewNextZone) els.btnPreviewNextZone.disabled = state.busy || !hasItems || state.items.length < 2;
 
   els.btnCopyOcrText.disabled = !selected || !(selected.rawText || "");
 }
 
+function getSelectedOcrModel() {
+  if (!els.ocrModelRadios || !els.ocrModelRadios.length) {
+    return "gemini-2.5-flash";
+  }
+  const selected = Array.from(els.ocrModelRadios).find(r => r.checked);
+  return selected ? selected.value : "gemini-2.5-flash";
+}
+
 function applyImageTransform(item) {
   if (!item) return;
-  els.previewImage.style.transform = `rotate(${item.view.rotation || 0}deg) scale(${item.view.scale || 1})`;
+  const x = item.view.panX || 0;
+  const y = item.view.panY || 0;
+  const canPan = (item.view.scale || 1) > 1;
+  els.previewImageWrap.classList.toggle("is-pan-enabled", canPan);
+  els.previewImage.style.transform = `translate(${x}px, ${y}px) rotate(${item.view.rotation || 0}deg) scale(${item.view.scale || 1})`;
 }
 
 function showGlobalStatus(message, type = "info") {
@@ -283,6 +305,19 @@ function showItemStatus(message, type = "info") {
 function clearItemStatus() {
   els.itemStatus.className = "status-panel";
   els.itemStatus.textContent = "";
+}
+
+function showOcrProgressModal(current, total, fileName, statusText) {
+  const ratio = total > 0 ? Math.min(100, Math.max(0, Math.round((current / total) * 100))) : 0;
+  els.ocrProgressText.textContent = `ไฟล์ ${current}/${total}: ${fileName || "-"}\n${statusText || "กำลังประมวลผล..."}`;
+  els.ocrProgressBar.style.width = `${ratio}%`;
+  els.ocrProgressModal.classList.remove("hidden");
+}
+
+function hideOcrProgressModal() {
+  els.ocrProgressModal.classList.add("hidden");
+  els.ocrProgressBar.style.width = "0%";
+  els.ocrProgressText.textContent = "กำลังเริ่มต้น...";
 }
 
 function updateSummary(formData) {
@@ -314,7 +349,6 @@ function showWorkspace() {
   els.appWorkspace.classList.remove("hidden");
 }
 
-// ✅ เพิ่ม function นี้ใหม่ (bind ครั้งเดียวตอน init)
 function initQueueListeners() {
   els.queueList.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
@@ -327,6 +361,11 @@ function initQueueListeners() {
         state.selectedId = id;
         clearItemStatus();
         renderAll();
+        return;
+      }
+
+      if (action === "process") {
+        if (!state.busy) ocrItem(id);
         return;
       }
 
@@ -350,39 +389,4 @@ function initQueueListeners() {
       renderAll();
     }
   });
-}
-
-function renderQueue() {
-  if (!state.items.length) {
-    els.queueList.innerHTML = `<div class="empty-note">ยังไม่มีไฟล์ในรายการ</div>`;
-    return;
-  }
-
-  // ✅ แค่ update innerHTML ไม่ต้อง clone / re-bind
-  els.queueList.innerHTML = state.items.map(item => {
-    const active = item.id === state.selectedId ? "active" : "";
-    const sizeMb = (item.file.size / (1024 * 1024)).toFixed(2);
-
-    return `
-      <div class="queue-item ${active}" data-id="${item.id}">
-        <div class="queue-top">
-          <div>
-            <div class="queue-name">${escapeHtml(item.file.name)}</div>
-            <div class="queue-meta">
-              ${escapeHtml(item.file.type || guessMimeTypeByName(item.file.name))}<br>
-              ${sizeMb} MB
-            </div>
-          </div>
-          <span class="badge ${item.status}">${escapeHtml(statusLabel(item.status))}</span>
-        </div>
-
-        ${item.error ? `<div class="queue-meta" style="color:#b91c1c;">${escapeHtml(item.error)}</div>` : ""}
-
-        <div class="queue-actions">
-          <button class="mini-btn select" data-action="select" data-id="${item.id}">เลือก</button>
-          <button class="mini-btn remove" data-action="remove" data-id="${item.id}">ลบ</button>
-        </div>
-      </div>
-    `;
-  }).join("");
 }

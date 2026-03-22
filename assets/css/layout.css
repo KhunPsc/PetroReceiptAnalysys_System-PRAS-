@@ -10,14 +10,14 @@
 
 .layout{
   display:grid;
-  grid-template-columns: 330px 1.05fr 360px 450px;
+  grid-template-columns: 1fr 1fr 1.2fr;
   gap:16px;
   align-items:start;
 }
 
 @media (max-width: 1650px){
   .layout{
-    grid-template-columns: 320px 1fr 340px 420px;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -25,6 +25,23 @@
   .layout{
     grid-template-columns: 1fr;
   }
+}
+
+.workspace-stack{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.preview-row{
+  display:block;
+}
+
+.layout-pair{
+  display:grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap:16px;
+  align-items:start;
 }
 
 @media (max-width: 900px){
@@ -36,19 +53,18 @@
   .brand-left{
     width:100%;
   }
+
+  .layout-pair{
+    grid-template-columns:1fr;
+  }
 }
 
 @media (max-width: 768px){
   .title-main{font-size:24px;}
   .title-sub{font-size:17px;}
-  .brand-logo-wrap{
-    width:68px;
-    height:68px;
-    border-radius:18px;
-  }
   .brand-logo{
-    max-width:50px;
-    max-height:50px;
+    width:132px;
+    height:132px;
   }
 
   .app{
