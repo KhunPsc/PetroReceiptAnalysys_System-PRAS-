@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0H0EddJY6iFUOSvPKD9o9BKFrs3_Xbpj19Zt52EL31izchXrf1Ez9dEW2iHQquMVY/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbww-1eGSeDHOQwS48xo5opvVTPfYOz4x358pDnd6rO4DQZb9ZOag2EqGgMUu52LKAfk/exec";
 const THEME_KEY = "petroleum_receipt_theme";
 
 const KNOWN_COMPANY_BY_TAX_ID = {
