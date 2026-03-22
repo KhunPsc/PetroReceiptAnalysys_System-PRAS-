@@ -17,6 +17,26 @@ function formatBackendErrorMessage(message) {
   return `${mainMessage}\n\n${debugInfo}`;
 }
 
+function enrichOcrErrorMessage(result, fallbackMessage) {
+  const baseMessage = formatBackendErrorMessage(
+    (result && result.error) || fallbackMessage || "OCR ไม่สำเร็จ"
+  );
+  const extras = [];
+
+  if (result && result.usedModel) {
+    extras.push(`Model requested: ${result.usedModel}`);
+  }
+  if (result && result.routeUsed) {
+    extras.push(`Route used: ${result.routeUsed}`);
+  }
+  if (result && result.backendVersion) {
+    extras.push(`Backend version: ${result.backendVersion}`);
+  }
+
+  if (!extras.length) return baseMessage;
+  return `${baseMessage}\n${extras.join("\n")}`;
+}
+
 function replaceFileExtension(filename, nextExt) {
   const safeExt = String(nextExt || "jpg").replace(/^\.+/, "") || "jpg";
   const name = String(filename || "receipt");
@@ -263,7 +283,9 @@ async function ocrItem(itemId) {
       payload: payloadToOcr
     });
 
-    if (!result.success) throw new Error(result.error || "OCR ไม่สำเร็จ");
+    if (!result.success) {
+      throw new Error(enrichOcrErrorMessage(result, "OCR ไม่สำเร็จ"));
+    }
 
     item.rawText = result.rawText || result.raw_text || "";
     item.formData = normalizeFormData(result.data || {});
