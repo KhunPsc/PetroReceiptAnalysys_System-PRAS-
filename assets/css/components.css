@@ -547,6 +547,7 @@ body.theme-dark .queue-item.active{
   color:var(--muted);
   font-size:12px;
   line-height:1.5;
+  white-space:pre-wrap;
 }
 
 .queue-actions{display:flex;gap:8px;margin-top:10px}

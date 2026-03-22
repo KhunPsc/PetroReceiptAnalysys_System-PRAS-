@@ -4,6 +4,28 @@ const state = {
   busy: false
 };
 
+function formatBackendErrorMessage(message) {
+  const raw = String(message || "").trim();
+  if (!raw) return "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+
+  const marker = " | [DEBUG INFO]";
+  const markerIndex = raw.indexOf(marker);
+  if (markerIndex === -1) return raw;
+
+  const mainMessage = raw.slice(0, markerIndex).replace(/^Error:\s*/i, "").trim();
+  const debugInfo = raw.slice(markerIndex + 3).trim();
+  return `${mainMessage}\n\n${debugInfo}`;
+}
+
+function replaceFileExtension(filename, nextExt) {
+  const safeExt = String(nextExt || "jpg").replace(/^\.+/, "") || "jpg";
+  const name = String(filename || "receipt");
+  if (/\.[A-Za-z0-9]+$/.test(name)) {
+    return name.replace(/\.[A-Za-z0-9]+$/, "." + safeExt);
+  }
+  return name + "." + safeExt;
+}
+
 function init() {
   applySavedTheme();
   bindEvents();
@@ -220,7 +242,13 @@ async function ocrItem(itemId) {
           threshold: 128,
           scale: 1.2
         });
-        payloadToOcr = { ...item.fileData, data: processedBase64, model: els.ocrModel.value };
+        payloadToOcr = {
+          ...item.fileData,
+          data: processedBase64,
+          type: "image/jpeg",
+          name: replaceFileExtension(item.fileData.name, "jpg"),
+          model: els.ocrModel.value
+        };
       } catch (err) {
         console.warn("Preprocessing failed, using original image", err);
         payloadToOcr = { ...item.fileData, model: els.ocrModel.value };
@@ -248,7 +276,7 @@ async function ocrItem(itemId) {
   } catch (err) {
     console.error(err);
     item.status = "error";
-    item.error = err.message || String(err);
+    item.error = formatBackendErrorMessage(err.message || String(err));
     renderAll();
     showItemStatus(`OCR ล้มเหลว: ${item.file.name}\n${item.error}`, "error");
   } finally {
