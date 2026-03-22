@@ -57,7 +57,8 @@ const els = {
   sumTotal: document.getElementById("sumTotal"),
 
   mainToolbar: document.getElementById("mainToolbar"),
-  appWorkspace: document.getElementById("appWorkspace")
+  appWorkspace: document.getElementById("appWorkspace"),
+  ocrModel: document.getElementById("ocrModel")
 };
 
 function applySavedTheme() {

@@ -190,10 +190,23 @@ async function ocrItem(itemId) {
           threshold: 128,
           scale: 1.2
         });
-        payloadToOcr = { ...item.fileData, data: processedBase64 };
+        payloadToOcr = { 
+          ...item.fileData, 
+          data: processedBase64,
+          model: els.ocrModel.value // Pass selected model
+        };
       } catch (err) {
         console.warn("Preprocessing failed, using original image", err);
+        payloadToOcr = { 
+          ...item.fileData,
+          model: els.ocrModel.value
+        };
       }
+    } else {
+      payloadToOcr = { 
+        ...item.fileData,
+        model: els.ocrModel.value
+      };
     }
 
     const result = await callBackendPost({
@@ -206,7 +219,7 @@ async function ocrItem(itemId) {
       throw new Error(result.error || "OCR ไม่สำเร็จ");
     }
 
-    item.rawText = result.raw_text || "";
+    item.rawText = result.rawText || result.raw_text || ""; // Handle both old/new naming
     item.formData = normalizeFormData(result.data || {});
     item.ocrDone = true;
     item.status = "ready";

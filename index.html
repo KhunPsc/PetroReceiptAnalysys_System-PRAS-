@@ -97,6 +97,15 @@
           </div>
         </label>
 
+        <!-- OCR MODEL SELECTION -->
+        <div style="margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <label for="ocrModel" style="font-size: 14px; font-weight: 800; color: var(--text);">เลือก Model OCR:</label>
+          <select id="ocrModel" class="field" style="width: auto; margin-bottom: 0; padding: 8px 12px; border-radius: 12px;">
+            <option value="typhoon-v1.5x-vision-instruct">Typhoon v1.5x Vision (แนะนำ)</option>
+            <option value="typhoon-vision-instruct">Typhoon Vision (มาตรฐาน)</option>
+          </select>
+        </div>
+
         <!-- MAIN TOOLBAR (Visible after files are added) -->
         <div class="toolbar hidden" id="mainToolbar" style="margin-top:20px; justify-content: center;">
           <button class="btn btn-primary" id="btnOcrCurrent" disabled>OCR ไฟล์นี้</button>
