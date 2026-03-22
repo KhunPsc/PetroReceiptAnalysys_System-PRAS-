@@ -7,6 +7,8 @@ const els = {
   itemStatus: document.getElementById("itemStatus"),
 
   btnThemeToggle: document.getElementById("btnThemeToggle"),
+  // ✅ FIX: เพิ่ม btnOpenSheet
+  btnOpenSheet: document.getElementById("btnOpenSheet"),
 
   btnOcrCurrent: document.getElementById("btnOcrCurrent"),
   btnOcrAll: document.getElementById("btnOcrAll"),
@@ -123,36 +125,48 @@ function renderQueue() {
     `;
   }).join("");
 
-  // Re-bind inline events for queue items
-  els.queueList.querySelectorAll('[data-action="select"]').forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      state.selectedId = btn.dataset.id;
-      clearItemStatus();
-      renderAll();
-    });
-  });
+  // ✅ FIX: ใช้ event delegation 1 listener แทน querySelectorAll forEach ทุก render
+  // clone node เพื่อล้าง listener เก่าออกก่อน แล้ว re-attach ใหม่
+  const oldList = els.queueList;
+  const newList = oldList.cloneNode(true);
+  oldList.parentNode.replaceChild(newList, oldList);
+  els.queueList = newList;
 
-  els.queueList.querySelectorAll('[data-action="remove"]').forEach(btn => {
-    btn.addEventListener("click", (e) => {
+  els.queueList.addEventListener("click", (e) => {
+    // handle data-action buttons (select / remove)
+    const btn = e.target.closest("[data-action]");
+    if (btn) {
       e.stopPropagation();
-      const item = state.items.find(x => x.id === btn.dataset.id);
-      if (!item) return;
-      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
-      state.items = state.items.filter(x => x.id !== item.id);
-      if (state.selectedId === item.id) {
-        state.selectedId = state.items[0]?.id || null;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if (action === "select") {
+        state.selectedId = id;
+        clearItemStatus();
+        renderAll();
+        return;
       }
-      renderAll();
-    });
-  });
 
-  els.queueList.querySelectorAll(".queue-item").forEach(card => {
-    card.addEventListener("click", () => {
+      if (action === "remove") {
+        const item = state.items.find(x => x.id === id);
+        if (!item) return;
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+        state.items = state.items.filter(x => x.id !== id);
+        if (state.selectedId === id) {
+          state.selectedId = state.items[0]?.id || null;
+        }
+        renderAll();
+        return;
+      }
+    }
+
+    // handle click on queue-item card (select item)
+    const card = e.target.closest(".queue-item");
+    if (card) {
       state.selectedId = card.dataset.id;
       clearItemStatus();
       renderAll();
-    });
+    }
   });
 }
 
@@ -251,7 +265,7 @@ function applyImageTransform(item) {
   els.previewImage.style.transform = `rotate(${item.view.rotation || 0}deg) scale(${item.view.scale || 1})`;
 }
 
-function showGlobalStatus(message, type="info") {
+function showGlobalStatus(message, type = "info") {
   els.globalStatus.className = `status-panel ${type}`;
   els.globalStatus.textContent = message;
 }
@@ -261,7 +275,7 @@ function clearGlobalStatus() {
   els.globalStatus.textContent = "";
 }
 
-function showItemStatus(message, type="info") {
+function showItemStatus(message, type = "info") {
   els.itemStatus.className = `status-panel ${type}`;
   els.itemStatus.textContent = message;
 }
@@ -288,12 +302,11 @@ function renderAll() {
   renderEditor();
   updateButtons();
 
-  // Show toolbar if there are items
   if (state.items.length > 0) {
     els.mainToolbar.classList.remove("hidden");
   } else {
     els.mainToolbar.classList.add("hidden");
-    els.appWorkspace.classList.add("hidden"); // Hide workspace if cleared
+    els.appWorkspace.classList.add("hidden");
   }
 }
 

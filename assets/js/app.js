@@ -434,3 +434,37 @@ function selectNextActionable() {
 
 // Start Application
 init();
+// ✅ เพิ่ม delay ระหว่างไฟล์ใน ocrAllItems
+await ocrItem(item.id);
+if (i < targets.length - 1) {
+  await new Promise(r => setTimeout(r, 1500));
+}
+
+// ✅ เพิ่มใน saveItem ก่อน callBackendPost
+function validateBeforeSave(formData) {
+  const errors = [];
+  if (!formData.date || formData.date === '-') errors.push('วันที่');
+  if (!formData.total_amount || formData.total_amount === 0) errors.push('ยอดรวม');
+  if (!formData.company || formData.company === '-') errors.push('บริษัท/ปั๊ม');
+  return errors;
+}
+
+// ใน saveItem เพิ่ม:
+const errs = validateBeforeSave(item.formData);
+if (errs.length) {
+  throw new Error('กรุณากรอกข้อมูลให้ครบ: ' + errs.join(', '));
+}
+
+// เพิ่มใน bindEvents() ใน app.js
+els.btnOpenSheet.addEventListener("click", async () => {
+  try {
+    const result = await callBackendPost({ action: "sheetUrl" });
+    if (result.success && result.url) {
+      window.open(result.url, "_blank");
+    } else {
+      showGlobalStatus("ไม่สามารถดึง URL ของ Sheet ได้", "error");
+    }
+  } catch (err) {
+    showGlobalStatus("เกิดข้อผิดพลาด: " + err.message, "error");
+  }
+});
