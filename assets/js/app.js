@@ -110,12 +110,15 @@ async function addFiles(files) {
 
   for (const file of validFiles) {
     const base64 = await fileToBase64(file);
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const safeName = `receipt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${fileExt}`;
+
     state.items.push({
       id: randomId(),
       requestId: randomId(),
       file,
       fileData: {
-        name: file.name,
+        name: safeName, // Forced English filename to prevent 502/Encoding issues
         type: file.type || guessMimeTypeByName(file.name),
         size: file.size,
         data: base64
